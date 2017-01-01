@@ -1,0 +1,41 @@
+.maprow { 
+  height: 280px; 
+  border: 2px solid gray;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.mapalt { 
+  height: 580px; 
+  border: 2px solid gray;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.mapalt
+
+.formrow{
+  margin-top: 20px;
+}
+
+#wordlist{
+  font-size: 200%;
+  white-space:nowrap;
+}
+
+.hidden { 
+  display: none; 
+}
+
+.center{
+  text-align: center;
+}
+
+.symbol{
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.leaflet-image-layer {
+    display: none;
+}

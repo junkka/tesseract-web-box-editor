@@ -1,156 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <title>Tesseract boxfile web editor</title>
-			<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-   
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-<!--     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script> -->
-		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
-		<script src="js/leaflet.draw.js"></script>
-		<script src="js/jquery.hotkeys.js"></script>
-		<script src="js/app.js"></script>
-    <!-- Bootstrap -->
-<!--     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"> -->
-		<link rel="stylesheet" href="css/bootstrap.min.css" />
-		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
-		<link rel="stylesheet" href="css/leaflet.draw.css">
-		<link rel="stylesheet" href="css/styles.css">
-  </head>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <title>Tesseract boxfile web editor</title>
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+  <!-- Include all compiled plugins (below), or include individual files as needed -->
+  <!--     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script> -->
+  <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+  <script src="js/leaflet.draw.js"></script>
+  <script src="js/jquery.hotkeys.js"></script>
+  <script src="js/app.js"></script>
+  <!-- Bootstrap -->
+  <!--     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"> -->
+  <!-- <link rel="stylesheet" href="css/bootstrap.min.css" /> -->
+  <link rel="stylesheet" href="css/semantic.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/leaflet.draw.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
 <body>
-	<nav class="navbar navbar-default">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<a class="navbar-brand" href="#">Tesseract OCR boxfile web editor</a>
-			</div>
-		</div>
-	</nav>
-
-	<div class="container-fluid">
-		 <div class="row inputrow">
-  <div class="col-md-12">
-    <form class="form-inline">
-      <div class="form-group">
-        <label for="file">Image:</label>
-        <input class="form-control" type="file" id="file" name="file"/>
+  <!-- <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#">Tesseract OCR boxfile web editor</a>
       </div>
-      <div class="form-group">
-        <label for="boxfile">Box file:</label>
-        <input class="form-control" type="file" id="boxfile" name="boxfile"/>
+    </div>
+  </nav> -->
+  <div class="ui container">
+    <!-- <div class="ui grid"> -->
+    <!-- <div class="row"> -->
+    <h1 class="ui header">
+      Box Editor for Tesseract
+    </h1>
+    <!-- </div> -->
+    <div class="ui secondary segment">
+      <div class="ui two column grid">
+        <div class="ten wide column">
+          <h4 class="ui dividing header">Upload Documents</h4>
+          <form class="ui form">
+            <div class="two fields">
+              <div class="field">
+                <label for="file">Image</label>
+                <input class="form-control" type="file" id="file" name="file" />
+              </div>
+              <div class="field">
+                <label for="boxfile">Box File</label>
+                <input class="form-control" type="file" id="boxfile" name="boxfile" />
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="six wide column">
+          <h4 class="ui dividing header">Download Document</h4>
+          <form class="ui form">
+            <div class="field">
+              <label for="download">Box File</label>
+              <button id="downloadBtn" name="download" class="ui labeled icon button">
+                Download
+                <i class="download icon"></i>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </form>
-  </div>
-</div>
-<div class="row">
-  <div class="col-md-12">
+    </div>
+    <div class="ui secondary segment">
+      <div class="ui basic fitted segment">
+        <div class="maprow" id="mapid"></div>
+        <form class="ui form" id="updateTxt">
+          <div class="field">
+            <label class="col-sm-2 control-label" for="formtxt" id="txtlabel">Text</label>
+            <input type="text" id="formtxt" boxid="" name="txt" value="">
+          </div>
+        </form>
+      </div>
+      <div class="ui basic fitted segment">
+        <form id="formbox" class="ui form">
+          <div class="four fields">
+            <div class="field">
+              <label for="x1">Left</label>
+              <input type="number" id="x1" name="x1" value="">
+            </div>
+            <div class="field">
+              <label for="y1">Bottom</label>
+              <input type="number" id="y1" name="y1" value="">
+            </div>
+            <div class="field">
+              <label for="x2">Right</label>
+              <input type="number" id="x2" name="x2" value="">
+            </div>
+            <div class="field">
+              <label for="y2">Top</label>
+              <input type="number" id="y2" name="y2" value="">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="ui center aligned basic segment">
+        <button id="previousBB" class="ui labeled icon button">
+          <i class="left chevron icon"></i>
+          Previous
+        </button>
 
-    <div class="maprow" id="mapid"></div>
+        <button id="updateText" class="ui button" type="submit">Update Line</button>
 
-  </div>
-</div>
-
-<div class="row">
-  <div class="col-md-12 center">
-    <center>
-      <p id="wordlist" >
+        <button id="nextBB" class="ui right labeled icon button">
+          Next
+          <i class="right chevron icon"></i>
+        </button>
+      </div>
+    </div>
+    <!-- <div class="ui message">
+      <i class="close icon"></i>
+      <div class="header">
+        Shortcuts!
+      </div>
+      <p>
+        <div class="ui divided list">
+          <div class="item">
+            <div class="ui large label">control + shift + up</div>
+            Previous Box Line
+          </div>
+          <div class="item">
+            <div class="ui large label">control + shift + down</div>
+            Next Box Line
+          </div>
+        </div>
       </p>
-    </center>
+    </div> -->
+    <!-- <div class="ui label">⌃</div> +
+    <div class="ui label">⇧</div> +
+    <div class="ui label">⏷</div> =
+    Next Box Line -->
+    <div class="ui container">
+      <div class="ui right floated basic fitted segment">
+        <a href="https://github.com/mariuspenteliuc/box-editor" target="_blank">
+          <i class="github icon"></i>
+        </a>
+      </div>
+      <div class="ui horizontal small list">
+        <div class="item">
+          By: <a href="https://penteliuc.com">Marius E. Penteliuc</a>
+        </div>
+        <div class="item">
+          Originally: <a href="https://johanjunkka.com">Johan Junkka</a>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
-<div id="formrow" class="row formrow hidden">
-  <div class="col-md-4">
-    
-    <h4>
-      Keyboard shortcuts:  
-    </h4>
-    <dl class="dl-horizontal">
-      <dt>cntr+left:</dt>
-      <dd>previous symbol</dd>
-      <dt>cntr+right:</dt>
-      <dd>next symbol</dd>
-    </dl>     
-  </div>
-  <div class="col-md-4">
-    <form class="form-horizontal" id="updateTxt">
-      <div class="form-group">
-        <label class="col-sm-2 control-label" for="formtxt" id="txtlabel">Text</label>
-        <div class="col-sm-10">
-          <input type="text" id="formtxt" boxid="" name="txt" class="form-control input-lg" value="">
-        </div>
-      </div>
-      <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-10">
-          <button type="submit" class="btn btn-default">Update</button>
-        </div>
-      </div>
-    </form>
-    <form class="form-horizontal" id="formbox">
-      <div class="form-group">
-        <label class="col-sm-2 control-label" for="y1" id="y1label">Y1</label>
-        <div class="col-sm-6">
-          <input type="number" id="y1" name="y1" class="form-control input-lg" value="">
-        </div>
-        <div class="col-ms-4"></div>
-      </div>
-      
-      <div class="form-group">
-        <label class="col-sm-2 control-label" for="x1" id="x1label">X1</label>
-        <div class="col-sm-6">
-          <input type="number" id="x1" name="x1" class="form-control input-lg" value="">
-<!--           number -->
-        </div>
-        <div class="col-ms-4"></div>
-      </div>
-      <div class="form-group">
-        <label class="col-sm-2 control-label" for="y2" id="y2label">Y2</label>
-        <div class="col-sm-6">
-          <input type="number" id="y2" name="y2" class="form-control input-lg" value="">
-<!--           number -->
-        </div>
-        <div class="col-ms-4">
-          
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="col-sm-2 control-label" for="x2" id="x2label">X2</label>
-        <div class="col-sm-6">
-          <input type="number" id="x2" name="x2" class="form-control input-lg" value="">
-<!--           number -->
-        </div>
-        <div class="col-ms-4">
-          
-        </div>
-      </div>
-      
-    </form>
- 
 
+</body>
 
-  </div>
-  <div class="col-md-4">
-    <button id="previousBB" class="btn btn-default">Previous</button>
-    <button id="nextBB" class="btn btn-default">Next</button>
-    <br/>
-    <br/>
-    <button id="downloadBtn" class="btn bt.default">
-      Download
-    </button>
-  </div>
-</div>
-		<footer>
-			<p>
-				By: <a href="http://johanjunkka.com">Johan Junkka</a>
-			</p>			
-	<p>
-		<a href="https://github.com/junkka/tesseract-web-box-editor">GitHub</a>
-	</p>
-		</footer>
-	</div>
-
-  </body>
 </html>

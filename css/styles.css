@@ -3,6 +3,11 @@
   border: 2px solid gray;
   margin-top: 20px;
   margin-bottom: 20px;
+  width: 100%;
+}
+
+.ui.vertical.divider {
+  left: 62.5%;
 }
 
 .mapalt { 

@@ -506,32 +506,30 @@ $(document).ready(function () {
   $('#formtxt').bind('keydown', 'shift+return', getPrevAndFill);
 
   $('#downloadBtn').on('click', function (e) {
-    var content = ''
+    var content = '';
     if (boxFileType == BoxFileType.CHAR_OR_LINE) {
       $.each(boxdata, function () {
         content = content + this.text + ' ' + this.x1 + ' ' + this.y1 + ' ' + this.x2 + ' ' + this.y2 + ' 0\n'
       })
     }
     if (boxFileType == BoxFileType.WORDSTR) {
-      
       $.each(boxdata, function () {
-        
-        // if (this.text != '\t') {
         content = content + 'WordStr ' + this.x1 + ' ' + this.y1 + ' ' + this.x2 + ' ' + this.y2 + ' 0 #' + this.text + '\n';
         content = content + '\t ' + (this.x2 + 1) + ' ' + this.y1 + ' ' + (this.x2 + 5) + ' ' + this.y2 + ' 0\n';
-        // }
       })
     }
 
     var element = document.createElement('a');
-    element.setAttribute('href', 'data:application/text;charset=utf-8,' + encodeURIComponent(content));
-    element.setAttribute('download', imageFileName + '.box');
-    // element.setAttribute('target', '_blank');
+    element.href = 'data:application/text;charset=utf-8, ' + encodeURIComponent(content);
+    element.download = imageFileName + '.box';
+    element.target = '_blank';
     element.style.display = 'none';
+
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
     // window.open("data:application/txt," + encodeURIComponent(content), "_blank");
+    
   });
 
   $('#formtxt').on('focus', function () { $(this).select(); });

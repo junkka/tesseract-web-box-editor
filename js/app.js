@@ -1,5 +1,6 @@
 const BoxFileType = Object.freeze({ "WORDSTR": 1, "CHAR_OR_LINE": 2 })
 const IgnoreEOFBox = true
+var imageFileName;
 $(document).ready(function () {
   var _URL = window.URL || window.webkitURL,
     h,
@@ -52,6 +53,7 @@ $(document).ready(function () {
 
 
     if ((file = this.files[0])) {
+      imageFileName = file.name.split('.')[0]
       img = new Image();
       img.onload = function () {
         console.log(this.width + " " + this.height);
@@ -505,17 +507,31 @@ $(document).ready(function () {
 
   $('#downloadBtn').on('click', function (e) {
     var content = ''
-    $.each(boxdata, function () {
+    if (boxFileType == BoxFileType.CHAR_OR_LINE) {
+      $.each(boxdata, function () {
+        content = content + this.text + ' ' + this.x1 + ' ' + this.y1 + ' ' + this.x2 + ' ' + this.y2 + ' 0\n'
+      })
+    }
+    if (boxFileType == BoxFileType.WORDSTR) {
       
-      if (this.text != '\t') {
-        content = content + 'WordStr ' + this.x1 + ' ' + this.y1 + ' ' + this.x2 + ' ' + this.y2 + ' 0 #' + this.text + '\n'
-        content = content + '\t ' + (this.x2 + 1) + ' ' + this.y1 + ' ' + (this.x2 + 5) + ' ' + this.y2 + ' 0\n'
-      } else {
-        // content = content + this.text + ' ' + this.x1 + ' ' + this.y1 + ' ' + this.x2 + ' ' + this.y2 + ' 0\n'
-      }
-    })
+      $.each(boxdata, function () {
+        
+        // if (this.text != '\t') {
+        content = content + 'WordStr ' + this.x1 + ' ' + this.y1 + ' ' + this.x2 + ' ' + this.y2 + ' 0 #' + this.text + '\n';
+        content = content + '\t ' + (this.x2 + 1) + ' ' + this.y1 + ' ' + (this.x2 + 5) + ' ' + this.y2 + ' 0\n';
+        // }
+      })
+    }
 
-    window.open("data:application/txt," + encodeURIComponent(content), "_self");
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+    element.setAttribute('download', imageFileName + '.box');
+    // element.setAttribute('target', '_blank');
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    // window.open("data:application/txt," + encodeURIComponent(content), "_blank");
   });
 
   $('#formtxt').on('focus', function () { $(this).select(); });

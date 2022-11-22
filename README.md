@@ -28,5 +28,10 @@ Currently, the app does not work properly if no box file is uploaded.
 - [ ] Keep session data using cookies;
 - [ ] Notify users of background actions.
 
+### Acknowledgment
+This work was supported by a grant of the Ministry of Research, Innovation and Digitization, CCCDI - UEFISCDI, project number PN-III-P2-2.1-PED-2021-0693, within PNCDI III.
+
+Project website: [https://transitional-romanian-transliteration.azurewebsites.net](https://transitional-romanian-transliteration.azurewebsites.net) (pending...)
+
 ----------
 Original Source by [Johan Junkka](http://johanjunkka.com/)

@@ -88,9 +88,14 @@ $(document).ready(function () {
   });
 
   function getBoxFileType(boxContent) {
-    first = boxContent.startsWith("WordStr ");
-    second = boxContent.split('\n')[1].startsWith("\t ");
-    if (first && second) {
+    var assumeWordStrFormat;
+    if (boxContent == "") {
+      assumeWordStrFormat = true;
+    } else {
+      first = boxContent.startsWith("WordStr ");
+      second = boxContent.split('\n')[1].startsWith("\t ");
+    }
+    if (assumeWordStrFormat || (first && second)) {
       boxFileType = BoxFileType.WORDSTR;
     } else {
       boxFileType = BoxFileType.CHAR_OR_LINE;

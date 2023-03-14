@@ -1,5 +1,5 @@
-.maprow { 
-  height: 280px; 
+.maprow {
+  height: 280px;
   border: 2px solid gray;
   margin-top: 20px;
   margin-bottom: 20px;
@@ -10,37 +10,96 @@
   left: 62.5%;
 }
 
-.mapalt { 
-  height: 580px; 
+.mapalt {
+  height: 580px;
   border: 2px solid gray;
   margin-top: 20px;
   margin-bottom: 20px;
 }
 
-.mapalt
-
-.formrow{
+.mapalt .formrow {
   margin-top: 20px;
 }
 
-#wordlist{
+#wordlist {
   font-size: 200%;
-  white-space:nowrap;
+  white-space: nowrap;
 }
 
-.hidden { 
-  display: none; 
+.hidden {
+  display: none;
 }
 
-.center{
+.center {
   text-align: center;
 }
 
-.symbol{
+.symbol {
   padding-left: 5px;
   padding-right: 5px;
 }
 
 .leaflet-image-layer {
-    display: none;
+  display: none;
+}
+
+/* Define styles for colorized text */
+.cyrillic {
+  color: #db2828;
+}
+
+.latin {
+  color: #2185d0;
+}
+.space {
+  color: transparent;
+}
+
+#myInputContainer {
+  position: absolute;
+  width: 100%;
+  /* display: inline-block; */
+}
+
+#myInputBackground {
+  /* position: absolute; */
+  top: 0;
+  left: 0;
+  z-index: 0;
+  font-size: 20px;
+  font-family: Lato, system-ui, -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  margin: 0;
+  outline: 0;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  line-height: 1.21428571em;
+  padding: .67857143em 1em;
+  font-size: 1em;
+  background: #fff;
+  border: 1px solid rgba(34, 36, 38, .15);
+  color: rgba(0, 0, 0, .87);
+  border-radius: .28571429rem;
+  -webkit-box-shadow: 0 0 0 0 transparent inset;
+  box-shadow: 0 0 0 0 transparent inset;
+  -webkit-transition: color .1s ease, border-color .1s ease;
+  transition: color .1s ease, border-color .1s ease;
+}
+
+/* #formtxt-shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+} */
+
+#formtxt {
+  position: relative;
+  /* opacity: 0; */
+  z-index: 2;
+  color: transparent;
+  caret-color:black;
+  background-color: transparent;
+  /* border: none; */
+  /* outline: none; */
+  font-family: Lato, system-ui, -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }

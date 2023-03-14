@@ -105,8 +105,8 @@ function focusRect(id) {
 function processFile(e) {
   var file = e.target.result;
   getBoxFileType(file);
-  console.log("Box File Type", boxFileType);
-  console.log("bounds", bounds);
+  // console.log("Box File Type", boxFileType);
+  // console.log("bounds", bounds);
   if (file && file.length) {
     //       if (boxlayer){
     boxlayer.clearLayers();
@@ -367,13 +367,13 @@ $('#formtxt').on('focus', function () { $(this).select(); });
 // Set #main-edit-area loading status
 function setMainLoadingStatus(status) {
   if (status) {
-    $('#main-edit-area').addClass('loading');
+    $('#mapid').addClass('loading');
     // move map to background
-    $('#mapid').hide();
+    // $('#mapid').hide();
   } else {
-    $('#main-edit-area').removeClass('loading');
+    $('#mapid').removeClass('loading');
     // show map
-    $('#mapid').show();
+    // $('#mapid').show();
   }
 }
 
@@ -451,7 +451,7 @@ function loadBoxFile(e) {
   }
 }
 
-function loadImageFile(e) {
+async function loadImageFile(e) {
   {
     var file, img;
 
@@ -459,8 +459,10 @@ function loadImageFile(e) {
     if ((file = this.files[0])) {
       imageFileName = file.name.split('.')[0]
       img = new Image();
-      img.onload = function () {
-        console.log(this.width + " " + this.height);
+      img.onload = async function () {
+        res = await generateInitialBoxes(img)
+        closeInfoMessage()
+        // console.log(this.width + " " + this.height);
         h = this.height
         w = this.width
         bounds = [[0, 0], [parseInt(h), parseInt(w)]]
@@ -481,15 +483,12 @@ function loadImageFile(e) {
 
 
         map.fitBounds(bounds2);
-        // set imageloaded
 
       };
       img.onerror = function () {
         alert("not a valid file: " + file.type);
       };
       img.src = _URL.createObjectURL(file);
-
-      generateInitialBoxes(img)
     }
   }
 }
@@ -502,7 +501,7 @@ function sortBoxes(a, b) {
 // Sort all bosees from top to bottom
 function sortAllBoxes() {
   boxdata.sort(sortBoxes);
-  console.log(boxdata)
+  // console.log(boxdata)
 }
 
 // // Define regular expressions and colors
@@ -564,10 +563,25 @@ function updateBackground() {
 }
 
 
-
+function closeInfoMessage() {
+      $('#info-message.message .close')
+        .closest('.message')
+        .transition('fade up')
+        ;
+      $("#mapid").removeClass("bottom attached");
+}
 
 
 $(document).ready(function () {
+  $('#info-message.message .close')
+    .on('click', function () {
+      $(this)
+        .closest('.message')
+        .transition('fade up')
+        ;
+      $("#mapid").removeClass("bottom attached");
+    })
+    ;
   $(window).keydown(function(event){
     if(event.keyCode == 13) {
       event.preventDefault();
@@ -600,6 +614,7 @@ $(document).ready(function () {
   $('#boxfile').change(loadBoxFile);
   //   load Image
   $("#file").change(loadImageFile);
+
 
   $('#downloadBtn').on('click', function (e) {
     var content = '';

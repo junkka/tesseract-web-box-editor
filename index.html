@@ -15,6 +15,7 @@
   <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
   <script src="js/leaflet.draw.js"></script>
   <script src="js/jquery.hotkeys.js"></script>
+  <script src="js/fomantic.min.js"></script>
   <script src='https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js'></script>
   <script src="js/app.js"></script>
   <!-- Bootstrap -->
@@ -74,7 +75,16 @@
     </div>
     <div class="ui secondary segment">
       <div id="main-edit-area" class="ui basic fitted segment">
-        <div class="maprow" id="mapid"></div>
+        <div id="info-message" class="ui top attached info message">
+          <i class="close icon"></i>
+          <div class="header">
+            Start Tagging!
+          </div>
+          Upload an image and start tagging the text using the form below. <br>
+          Bounding boxes will automatically be generated in a few seconds. <br>
+          <!-- Download the box file when you are done. -->
+        </div>
+        <div class="ui maprow bottom attached fitted segment" id="mapid"></div>
         <form class="ui form" id="updateTxt">
           <div id="myInputContainer" class="field">
             <label class="col-sm-2 control-label" for="formtxt" id="txtlabel">Text</label>

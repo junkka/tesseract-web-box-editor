@@ -2,6 +2,11 @@ const BoxFileType = Object.freeze({ "WORDSTR": 1, "CHAR_OR_LINE": 2 })
 const IgnoreEOFBox = true
 var map
 var imageFileName;
+var imageFileNameForButton;
+var boxFileName;
+var boxFileNameForButton;
+var boxdataIsDirty = false;
+var lineIsDirty = false;
 var _URL = window.URL || window.webkitURL,
   h,
   w,
@@ -41,6 +46,7 @@ function setFromData(d) {
   $("#x2").val(d.x2);
   $("#y2").val(d.y2);
   $('#formtxt').focus();
+  lineIsDirty = false;
 }
 
 function getPrevtBB(box) {
@@ -186,6 +192,7 @@ function processFile(e) {
     // select next BB
     var nextBB = getNextBB();
     fillAndFocusRect(nextBB);
+    updateBackground();
   }
 }
 
@@ -312,6 +319,8 @@ function updateBoxdata(id, d) {
   });
   var ndata = Object.assign({}, boxdata[thebox], d);
   boxdata[thebox] = ndata
+  boxdataIsDirty = true;
+  lineIsDirty = false;
 }
 
 function disableEdit(rect) {
@@ -380,6 +389,7 @@ function setMainLoadingStatus(status) {
 async function generateInitialBoxes(image) {
   // Set #main-edit-area loading status
   setMainLoadingStatus(true);
+  displayMessage({ message: 'Generating initial boxes...' });
 
   boxlayer.clearLayers();
   //         map.removeLayer(boxlayer);
@@ -433,6 +443,8 @@ async function generateInitialBoxes(image) {
 
   // Set #main-edit-area loading status
   setMainLoadingStatus(false);
+  numberOFBoxes = boxdata.length;
+  displayMessage({ message: 'Generated ' + numberOFBoxes + ' boxes.', type: 'success' });
 
   $('#formrow').removeClass('hidden');
   // select next BB
@@ -440,56 +452,143 @@ async function generateInitialBoxes(image) {
   fillAndFocusRect(nextBB);
 }
 
-function loadBoxFile(e) {
+async function askUser(object) {
+  if (object.confirmText == undefined) {
+    object.confirmText = 'OK';
+  }
+  if (object.denyText == undefined) {
+    object.denyText = 'Cancel';
+  }
+  return new Promise((resolve, reject) => {
+    $.modal({
+      title: object.title,
+      // class: 'mini',
+      blurring: true,
+      closeIcon: true,
+      onApprove: function () {
+        resolve(true);
+      },
+      onDeny: function () {
+        resolve(false);
+      },
+      onHide: function () {
+        resolve(false);
+      },
+      content: object.message,
+      actions: [{
+        text: object.confirmText,
+        class: 'green positive'
+      }, {
+        text: object.denyText,
+        class: 'red negative'
+      }]
+    }).modal('show');
+  });
+}
+
+
+async function loadBoxFile(e) {
+  if (boxdataIsDirty) {
+    var result = await askUser({ message: 'You have unsaved changes. Are you sure you want to continue?', title: 'Unsaved Changes', type: 'warning' });
+    if (!result) {
+      return;
+    }
+  }
   var reader = new FileReader();
   var file;
   if ((file = this.files[0])) {
+    // Check file is .box
+    var ext = file.name.split('.').pop();
+    if (ext != 'box') {
+      displayMessage({ type: 'error', message: 'Expected box file. Received ' + ext + ' file.', title: 'Invalid File Type' });
+      // clear file input
+      $('#boxFile').val(boxFileName);
+      return;
+    } else if (imageFileName != file.name.split('.')[0] && imageFileName != undefined) {
+      result = await askUser({ message: 'Chosen file has name <code>' + file.name + '</code> instead of expected <code>' + imageFileName + '.box</code>.<br> Are you sure you want to continue?', title: 'Different File Name', type: 'warning' });
+      if (!result) {
+        // TODO: resolve this error:
+        // [Error] Unhandled Promise Rejection: InvalidStateError: The object is in an invalid state.
+        // clear file input
+        $('#boxFile').val(boxFileNameForButton);
+        return;
+      }
+    }
     // Read the file
     reader.readAsText(file);
+
+    boxFileName = file.name.split('.')[0]
+    boxFileNameForButton = file;
     // When it's loaded, process it
     $(reader).on('load', processFile);
   }
 }
 
+async function setButtonsEnabledState(state) {
+  if (state) {
+    $('#boxFile').prop('disabled', false);
+    $('#downloadBtn').removeClass('disabled');
+  } else {
+    $('#boxFile').prop('disabled', true);
+    $('#downloadBtn').addClass('disabled');
+  }
+}
+
 async function loadImageFile(e) {
-  {
-    var file, img;
+  if (boxdataIsDirty || lineIsDirty) {
+    var result = await askUser({ message: 'You have unsaved changes. Are you sure you want to continue?', title: 'Unsaved Changes', type: 'warning' });
+    if (!result) {
+      $('#imageFile').val(imageFileNameForButton);
+      return;
+    }
+  }
+  setButtonsEnabledState(false);
+  var file, img;
 
 
-    if ((file = this.files[0])) {
-      imageFileName = file.name.split('.')[0]
-      img = new Image();
-      img.onload = async function () {
-        res = await generateInitialBoxes(img)
-        closeInfoMessage()
-        // console.log(this.width + " " + this.height);
-        h = this.height
-        w = this.width
-        bounds = [[0, 0], [parseInt(h), parseInt(w)]]
-        var bounds2 = [[h - 300, 0], [h, w]]
+  if ((file = this.files[0])) {
+    imageFileName = file.name.split('.')[0]
+    imageFileNameForButton = file;
+    img = new Image();
+    img.onload = async function () {
+      map.eachLayer(function (layer) {
+        map.removeLayer(layer);
+      });
+      result = await generateInitialBoxes(img)
+      boxdataIsDirty = false;
+      setButtonsEnabledState(true);
+      // console.log(this.width + " " + this.height);
+      h = this.height
+      w = this.width
+      bounds = [[0, 0], [parseInt(h), parseInt(w)]]
+      var bounds2 = [[h - 300, 0], [h, w]]
 
-        if (image) {
-          $(image._image).fadeOut(250, function () {
-            map.removeLayer(image);
-            map.fitBounds(bounds2);
-            image = new L.imageOverlay(img.src, bounds).addTo(map);
-            $(image._image).fadeIn(500);
-          });
-        } else {
+      if (image) {
+        $(image._image).fadeOut(250, function () {
+          map.removeLayer(image);
           map.fitBounds(bounds2);
           image = new L.imageOverlay(img.src, bounds).addTo(map);
           $(image._image).fadeIn(500);
-        }
-
-
+        });
+      } else {
         map.fitBounds(bounds2);
+        image = new L.imageOverlay(img.src, bounds).addTo(map);
+        $(image._image).fadeIn(500);
+      }
 
-      };
-      img.onerror = function () {
-        alert("not a valid file: " + file.type);
-      };
-      img.src = _URL.createObjectURL(file);
-    }
+
+      map.fitBounds(bounds2);
+
+    };
+    img.onerror = function () {
+      // get extension
+      var ext = file.name.split('.').pop();
+      displayMessage({ type: 'error', message: 'Expected image file. Received ' + ext + ' file.', title: 'Invalid File Type' })
+
+      // clear file input
+      $('#imageFile').val(imageFileNameForButton);
+    };
+    img.src = _URL.createObjectURL(file);
   }
 }
 
@@ -503,30 +602,6 @@ function sortAllBoxes() {
   boxdata.sort(sortBoxes);
   // console.log(boxdata)
 }
-
-// // Define regular expressions and colors
-// var cyrillic_pattern = /[\u0400-\u04FF\u0500-\u052F\u2DE0-\u2DFF\uA640-\uA69F\u1C80-\u1CBF]/;
-// var latin_pattern = /[\u0000-\u007F\u0080-\u00FF]/;
-// var cyrillicClass = 'red';
-// var latinClass = 'blue';
-
-
-// // Function to colorize input text
-// function colorizeInput() {
-//   var input = document.getElementById("formtxt");
-//   var colored_text = '';
-//   for (var i = 0; i < input.value.length; i++) {
-//     var char = input.value.charAt(i);
-//     if (cyrillic_pattern.test(char)) {
-//       colored_text += '<span class="' + cyrillicClass + '">' + char + '</span>';
-//     } else if (latin_pattern.test(char)) {
-//       colored_text += '<span class="' + latinClass + '">' + char + '</span>';
-//     } else {
-//       colored_text += char;
-//     }
-//   }
-//   input.innerHTML = colored_text;
-// }
 
 // Define regular expressions
 var cyrillic_pattern = /[\u0400-\u04FF\u0500-\u052F\u2DE0-\u2DFF\uA640-\uA69F\u1C80-\u1CBF]/;
@@ -555,6 +630,10 @@ function colorize(text) {
   return colored_text;
 }
 
+function setLineIsDirty() {
+  lineIsDirty = true;
+}
+
 // Function to update the background with the colorized text
 function updateBackground() {
   var input = document.getElementById("formtxt");
@@ -564,28 +643,41 @@ function updateBackground() {
   background.innerHTML = colored_text;
 }
 
-
-function closeInfoMessage() {
-      $('#info-message.message .close')
-        .closest('.message')
-        .transition('fade up')
-        ;
-      $("#mapid").removeClass("bottom attached");
+function displayMessage(object) {
+  if (object.title) {
+    object.message = '<br>' + object.message;
+  }
+  if (object.title == undefined) {
+    if (object.type == 'error') {
+      object.title = 'Error';
+    } else if (object.type == 'warning') {
+      object.title = 'Warning';
+    }
+  }
+  $.toast({
+    title: object.title,
+    class: object.type,
+    displayTime: 'auto',
+    showProgress: 'top',
+    position: 'top right',
+    classProgress: object.color,
+    message: object.message,
+    minDisplayTime: 3000,
+  });
 }
 
 
+
+
 $(document).ready(function () {
-  $('#info-message.message .close')
-    .on('click', function () {
-      $(this)
-        .closest('.message')
-        .transition('fade up')
-        ;
-      $("#mapid").removeClass("bottom attached");
-    })
-    ;
-  $(window).keydown(function(event){
-    if(event.keyCode == 13) {
+  displayMessage({ message: 'Click the question mark in the top right corner for help and keyboard shortcuts.' });
+
+  $('.big.question.circle.icon')
+    .popup({
+      inline: true
+    });
+  $(window).keydown(function (event) {
+    if (event.keyCode == 13) {
       event.preventDefault();
       submitText(event)
       return false;
@@ -613,12 +705,17 @@ $(document).ready(function () {
   map.addControl(drawControl);
 
   // load boxfile
-  $('#boxfile').change(loadBoxFile);
+  $('#boxFile').change(loadBoxFile);
   //   load Image
-  $("#file").change(loadImageFile);
+  $("#imageFile").change(loadImageFile);
 
 
-  $('#downloadBtn').on('click', function (e) {
+  $('#downloadBtn').on('click', async function (e) {
+    if (boxdata.length == 0) {
+      displayMessage({ type: 'warning', message: 'No box files to download.' });
+      return;
+    }
+    sortAllBoxes()
     var content = '';
     if (boxFileType == BoxFileType.CHAR_OR_LINE) {
       $.each(boxdata, function () {
@@ -641,7 +738,8 @@ $(document).ready(function () {
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
-    // window.open("data:application/txt," + encodeURIComponent(content), "_blank");
+    displayMessage({ message: 'Downloaded ' + imageFileName + '.box', type: 'success' });
+    boxdataIsDirty = false;
 
   });
 

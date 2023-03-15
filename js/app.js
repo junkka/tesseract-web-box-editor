@@ -46,18 +46,21 @@ function setFromData(d) {
   $("#x2").val(d.x2);
   $("#y2").val(d.y2);
   $('#formtxt').focus();
+  updateBackground();
   lineIsDirty = false;
+  updateProgressBar();
 }
 
 function getPrevtBB(box) {
-  // Next
+  // Prev
   if (typeof box === "undefined") {
     return boxdata[0];
   }
   var el = boxdata.findIndex(function (x) {
     return x.polyid == box.polyid;
   });
-  if (el === 0) {
+  // if (el === 0) {
+  if (el == boxdata.length) {
     return boxdata[el]
   }
   return boxdata[el - 1];
@@ -319,8 +322,10 @@ function updateBoxdata(id, d) {
   });
   var ndata = Object.assign({}, boxdata[thebox], d);
   boxdata[thebox] = ndata
+  // remember stuff is dirty
   boxdataIsDirty = true;
   lineIsDirty = false;
+  updateProgressBar();
 }
 
 function disableEdit(rect) {
@@ -534,6 +539,24 @@ async function setButtonsEnabledState(state) {
   }
 }
 
+function updateProgressBar() {
+  // get all lines with text
+  var linesWithText = boxdata.filter(function (el) {
+    return el.text != '';
+  });
+
+
+  $('#editingProgress')
+    .progress({
+      value: linesWithText.length,
+      total: boxdata.length,
+      text: {
+        active: '{value} of {total} boxes'
+      }
+    })
+    ;
+}
+
 async function loadImageFile(e) {
   if (boxdataIsDirty || lineIsDirty) {
     var result = await askUser({ message: 'You have unsaved changes. Are you sure you want to continue?', title: 'Unsaved Changes', type: 'warning' });
@@ -557,6 +580,9 @@ async function loadImageFile(e) {
       result = await generateInitialBoxes(img)
       boxdataIsDirty = false;
       setButtonsEnabledState(true);
+
+      updateProgressBar();
+
       // console.log(this.width + " " + this.height);
       h = this.height
       w = this.width

@@ -534,6 +534,8 @@ var latin_pattern = /[\u0000-\u007F\u0080-\u00FF]/;
 
 // Function to colorize text
 function colorize(text) {
+  // TODO: maybe could use Fomantic-UI colors
+  // <span class="ui info text">[text]</span>
   var colored_text = '';
   if (text == '') {
     return '&nbsp;'

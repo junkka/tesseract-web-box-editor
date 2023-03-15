@@ -75,6 +75,7 @@
     </div>
     <div class="ui secondary segment">
       <div id="main-edit-area" class="ui basic fitted segment">
+        <!-- TODO: replace Message with Toast -->
         <div id="info-message" class="ui top attached info message">
           <i class="close icon"></i>
           <div class="header">
@@ -85,6 +86,11 @@
           <!-- Download the box file when you are done. -->
         </div>
         <div class="ui maprow bottom attached fitted segment" id="mapid"></div>
+        <!-- TODO: add attached progress bar -->
+        <!-- <div class="ui tiny progress">
+          <div class="bar"></div>
+          <div class="label">Tiny</div>
+        </div> -->
         <form class="ui form" id="updateTxt">
           <div id="myInputContainer" class="field">
             <label class="col-sm-2 control-label" for="formtxt" id="txtlabel">Text</label>
@@ -95,49 +101,49 @@
             <label class="col-sm-2 control-label" for="formtxt" id="txtlabel">Text</label>
             <input type="text" id="formtxt" boxid="" name="txt" value="" onkeyup="updateBackground()">
 
-          </form>
-        </div>
-        <div class="ui mini blue empty circular label"></div>
-        Latin
-        <div class="ui mini red empty circular label"></div> Cyrillic
-      </div>
-        <div class="ui basic fitted segment">
-        <form id="formbox" class="ui form">
-          <div class="four fields">
-            <div class="field">
-              <label for="x1">Left</label>
-              <input type="number" id="x1" name="x1" value="">
-            </div>
-            <div class="field">
-              <label for="y1">Bottom</label>
-              <input type="number" id="y1" name="y1" value="">
-            </div>
-            <div class="field">
-              <label for="x2">Right</label>
-              <input type="number" id="x2" name="x2" value="">
-            </div>
-            <div class="field">
-              <label for="y2">Top</label>
-              <input type="number" id="y2" name="y2" value="">
-            </div>
-          </div>
         </form>
       </div>
-      <div class="ui center aligned basic segment">
-        <button id="previousBB" class="ui labeled icon button">
-          <i class="left chevron icon"></i>
-          Previous
-        </button>
-
-        <button id="updateText" class="ui button" type="submit">Update Line</button>
-
-        <button id="nextBB" class="ui right labeled icon button">
-          Next
-          <i class="right chevron icon"></i>
-        </button>
-      </div>
+      <div class="ui mini blue empty circular label"></div>
+      Latin
+      <div class="ui mini red empty circular label"></div> Cyrillic
     </div>
-    <!-- <div class="ui message">
+    <div class="ui basic fitted segment">
+      <form id="formbox" class="ui form">
+        <div class="four fields">
+          <div class="field">
+            <label for="x1">Left</label>
+            <input type="number" id="x1" name="x1" value="">
+          </div>
+          <div class="field">
+            <label for="y1">Bottom</label>
+            <input type="number" id="y1" name="y1" value="">
+          </div>
+          <div class="field">
+            <label for="x2">Right</label>
+            <input type="number" id="x2" name="x2" value="">
+          </div>
+          <div class="field">
+            <label for="y2">Top</label>
+            <input type="number" id="y2" name="y2" value="">
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="ui center aligned basic segment">
+      <button id="previousBB" class="ui labeled icon button">
+        <i class="left chevron icon"></i>
+        Previous
+      </button>
+
+      <button id="updateText" class="ui button" type="submit">Update Line</button>
+
+      <button id="nextBB" class="ui right labeled icon button">
+        Next
+        <i class="right chevron icon"></i>
+      </button>
+    </div>
+  </div>
+  <!-- <div class="ui message">
       <i class="close icon"></i>
       <div class="header">
         Shortcuts!
@@ -155,25 +161,38 @@
         </div>
       </p>
     </div> -->
-    <!-- <div class="ui label">⌃</div> +
+  <!-- <div class="ui label">⌃</div> +
     <div class="ui label">⇧</div> +
     <div class="ui label">⏷</div> =
     Next Box Line -->
-    <div class="ui container">
-      <div class="ui right floated basic fitted segment">
-        <a href="https://github.com/mariuspenteliuc/box-editor-for-tesseract" target="_blank">
-          <i class="github icon"></i>
-        </a>
+  <div class="ui container">
+    <div class="ui basic fitted segments">
+      <div class="ui horizontal basic segments">
+        <div class="ui basic fitted segment">
+          <div class="ui horizontal small list">
+            <div class="item">
+              By: <a href="https://penteliuc.com">Marius E. Penteliuc</a>
+            </div>
+            <div class="item">
+              Originally: <a href="https://johanjunkka.com">Johan Junkka</a>
+            </div>
+          </div>
+        </div>
+        <div class="ui right aligned basic fitted segment">
+          <a href="https://github.com/mariuspenteliuc/box-editor-for-tesseract" target="_blank">
+            <i class="github icon"></i>
+          </a>
+        </div>
       </div>
-      <div class="ui horizontal small list">
-        <div class="item">
-          By: <a href="https://penteliuc.com">Marius E. Penteliuc</a>
-        </div>
-        <div class="item">
-          Originally: <a href="https://johanjunkka.com">Johan Junkka</a>
-        </div>
+      <div class="ui basic horizontally fitted segment">
+        <p>This work was supported by a grant of the Romanian Ministry of Research, Innovation and Digitization, CCCDI - UEFISCDI,
+        project number PN-III-P2-2.1-PED-2021-0693, within PNCDI III.</p>
       </div>
     </div>
+
+    </div>
+
+  </div>
   </div>
 
 </body>

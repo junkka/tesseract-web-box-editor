@@ -100,7 +100,7 @@ function removeStyle(rect) {
 
 function focusRectangle(rect) {
   disableEdit(rect);
-  map.fitBounds(rect.getBounds(), { maxZoom: zoomMax, animate: true, padding: [2, 2] });
+  map.fitBounds(rect.getBounds(), { maxZoom: zoomMax, animate: true, padding: [10,10] });
   // map.flyToBounds(rect.getBounds(), { duration: 0.1});
   // set style
   selectedPoly = rect

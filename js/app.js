@@ -229,7 +229,7 @@ function onRectClick(event) {
   //     var nearest = leafletKnn(boxlayer).nearest(L.latLng(point[0], point[1]), 5);
   //     console.log(nearest)
   removeStyle(selectedPoly)
-  map.fitBounds(rect.getBounds(), { maxZoom: zoomMax + 1 });
+  map.fitBounds(rect.getBounds(), { maxZoom: zoomMax + 5 });
   setStyle(rect)
   disableEdit(rect);
   enableEdit(rect);
@@ -449,7 +449,7 @@ async function generateInitialBoxes(image) {
   // Set #main-edit-area loading status
   setMainLoadingStatus(false);
   numberOFBoxes = boxdata.length;
-  displayMessage({ message: 'Generated ' + numberOFBoxes + ' boxes.', type: 'success' });
+  // displayMessage({ message: 'Generated ' + numberOFBoxes + ' boxes.', type: 'success' });
 
   $('#formrow').removeClass('hidden');
   // select next BB
@@ -709,25 +709,36 @@ $(document).ready(function () {
       return false;
     }
   });
+  var zoomControl = new L.Control.Zoom({
+    position: 'topright'
+  });
   var drawControl = new L.Control.Draw({
     draw: {
       polygon: false,
       marker: false,
       circle: false,
       polyline: false,
-      rectangle: true
+      rectangle: true,
     },
+    position: 'topright',
     edit: {
       featureGroup: boxlayer,
-      edit: false
+      edit: false,
+      remove: true,
     }
   });
 
   map = new L.map('mapid', {
     crs: L.CRS.Simple,
-    minZoom: -5
+    minZoom: -1,
+    zoomSnap: 1,
+    // scrollWheelZoom: false,
+    touchZoom: true,
+    zoomControl: false,
+    maxBoundsViscosity: .5,
   });
 
+  map.addControl(zoomControl);
   map.addControl(drawControl);
 
   // load boxfile

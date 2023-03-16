@@ -32,16 +32,7 @@
 </head>
 
 <body>
-  <!-- <nav class="navbar navbar-default">
-    <div class="container-fluid">
-      <div class="navbar-header">
-        <a class="navbar-brand" href="#">Tesseract OCR boxfile web editor</a>
-      </div>
-    </div>
-  </nav> -->
   <div class="ui container">
-    <!-- <div class="ui grid"> -->
-    <!-- <div class="row"> -->
     <div class="ui basic horizontal segments">
       <div class="ui basic horizontally fitted segment">
         <h1 class="ui header">
@@ -107,10 +98,10 @@
       <div id="main-edit-area" class="ui basic fitted segment">
         <div class="ui maprow fitted segment" id="mapid"></div>
         <!-- TODO: add attached progress bar -->
-        <!-- <div class="ui tiny progress">
+        <div class="ui tiny progress" id="editingProgress">
           <div class="bar"></div>
-          <div class="label">Tiny</div>
-        </div> -->
+          <div class="label"></div>
+        </div>
         <form class="ui form" id="updateTxt">
           <div id="myInputContainer" class="field">
             <label class="col-sm-2 control-label" for="formtxt" id="txtlabel">Text</label>

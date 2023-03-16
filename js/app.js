@@ -46,18 +46,21 @@ function setFromData(d) {
   $("#x2").val(d.x2);
   $("#y2").val(d.y2);
   $('#formtxt').focus();
+  updateBackground();
   lineIsDirty = false;
+  updateProgressBar();
 }
 
 function getPrevtBB(box) {
-  // Next
+  // Prev
   if (typeof box === "undefined") {
     return boxdata[0];
   }
   var el = boxdata.findIndex(function (x) {
     return x.polyid == box.polyid;
   });
-  if (el === 0) {
+  // if (el === 0) {
+  if (el == boxdata.length) {
     return boxdata[el]
   }
   return boxdata[el - 1];
@@ -226,7 +229,7 @@ function onRectClick(event) {
   //     var nearest = leafletKnn(boxlayer).nearest(L.latLng(point[0], point[1]), 5);
   //     console.log(nearest)
   removeStyle(selectedPoly)
-  map.fitBounds(rect.getBounds(), { maxZoom: zoomMax + 1 });
+  map.fitBounds(rect.getBounds(), { maxZoom: zoomMax + 5 });
   setStyle(rect)
   disableEdit(rect);
   enableEdit(rect);
@@ -319,8 +322,10 @@ function updateBoxdata(id, d) {
   });
   var ndata = Object.assign({}, boxdata[thebox], d);
   boxdata[thebox] = ndata
+  // remember stuff is dirty
   boxdataIsDirty = true;
   lineIsDirty = false;
+  updateProgressBar();
 }
 
 function disableEdit(rect) {
@@ -444,7 +449,7 @@ async function generateInitialBoxes(image) {
   // Set #main-edit-area loading status
   setMainLoadingStatus(false);
   numberOFBoxes = boxdata.length;
-  displayMessage({ message: 'Generated ' + numberOFBoxes + ' boxes.', type: 'success' });
+  // displayMessage({ message: 'Generated ' + numberOFBoxes + ' boxes.', type: 'success' });
 
   $('#formrow').removeClass('hidden');
   // select next BB
@@ -534,6 +539,24 @@ async function setButtonsEnabledState(state) {
   }
 }
 
+function updateProgressBar() {
+  // get all lines with text
+  var linesWithText = boxdata.filter(function (el) {
+    return el.text != '';
+  });
+
+
+  $('#editingProgress')
+    .progress({
+      value: linesWithText.length,
+      total: boxdata.length,
+      text: {
+        active: '{value} of {total} boxes'
+      }
+    })
+    ;
+}
+
 async function loadImageFile(e) {
   if (boxdataIsDirty || lineIsDirty) {
     var result = await askUser({ message: 'You have unsaved changes. Are you sure you want to continue?', title: 'Unsaved Changes', type: 'warning' });
@@ -557,6 +580,9 @@ async function loadImageFile(e) {
       result = await generateInitialBoxes(img)
       boxdataIsDirty = false;
       setButtonsEnabledState(true);
+
+      updateProgressBar();
+
       // console.log(this.width + " " + this.height);
       h = this.height
       w = this.width
@@ -683,25 +709,36 @@ $(document).ready(function () {
       return false;
     }
   });
+  var zoomControl = new L.Control.Zoom({
+    position: 'topright'
+  });
   var drawControl = new L.Control.Draw({
     draw: {
       polygon: false,
       marker: false,
       circle: false,
       polyline: false,
-      rectangle: true
+      rectangle: true,
     },
+    position: 'topright',
     edit: {
       featureGroup: boxlayer,
-      edit: false
+      edit: false,
+      remove: true,
     }
   });
 
   map = new L.map('mapid', {
     crs: L.CRS.Simple,
-    minZoom: -5
+    minZoom: -1,
+    zoomSnap: 1,
+    // scrollWheelZoom: false,
+    touchZoom: true,
+    zoomControl: false,
+    maxBoundsViscosity: .5,
   });
 
+  map.addControl(zoomControl);
   map.addControl(drawControl);
 
   // load boxfile

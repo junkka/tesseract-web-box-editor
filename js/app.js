@@ -255,16 +255,20 @@ var doneMovingInterval = 200,
 
 
 function getNextAndFill() {
+  submitText();
   var box = getNextBB(selectedBox);
   setFromData(box);
+  // setFromData(selectedBox);
 
   clearTimeout(movingTimer);
   movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid);
 }
 
 function getPrevAndFill() {
+  submitText();
   var box = getPrevtBB(selectedBox);
   setFromData(box);
+  // setFromData(selectedBox);
   clearTimeout(movingTimer);
   movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid);
 }
@@ -302,9 +306,11 @@ $('#y2').on('input', function (e) {
   movingTimer = setTimeout(onBoxInputChange, doneMovingInterval);
 });
 
-$('#updateTxt').on('submit', submitText);
+$('#updateTxt').on('submit', getNextAndFill);
 function submitText(e) {
-  e.preventDefault();
+  if (e) {
+    e.preventDefault();
+  }
 
   var polyid = parseInt($('#formtxt').attr('boxid'));
   //       console.log("polyig;", polyid, "val", $('#formtxt').val())
@@ -317,7 +323,7 @@ function submitText(e) {
   }
   updateBoxdata(polyid, newdata)
   updateRect(polyid, newdata)
-  fillAndFocusRect(getNextBB(selectedBox))
+  // fillAndFocusRect(selectedBox)
 }
 
 function updateBoxdata(id, d) {
@@ -755,7 +761,8 @@ $(document).ready(function () {
   $(window).keydown(function (event) {
     if (event.keyCode == 13) {
       event.preventDefault();
-      submitText(event)
+      // submitText(event)
+      getNextAndFill();
       return false;
     }
   });

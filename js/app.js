@@ -553,6 +553,7 @@ async function setButtonsEnabledState(state) {
     $('#myInputContainer').removeClass('disabled');
     $('#formtxt').prop('disabled', false);
     $('#taggingSegment').removeClass('disabled');
+
   } else {
     $('#boxFile').prop('disabled', true);
     $('#downloadBtn').addClass('disabled');
@@ -615,7 +616,6 @@ async function loadImageFile(e) {
       result = await generateInitialBoxes(img)
       boxdataIsDirty = false;
       setButtonsEnabledState(true);
-
       updateProgressBar();
 
       // console.log(this.width + " " + this.height);
@@ -640,6 +640,7 @@ async function loadImageFile(e) {
 
       map.fitBounds(bounds2);
 
+
     };
     img.onerror = function () {
       // get extension
@@ -650,6 +651,8 @@ async function loadImageFile(e) {
       $('#imageFile').val(imageFileNameForButton);
     };
     img.src = _URL.createObjectURL(file);
+    // focus text input
+    $('#formtxt').focus();
   }
 }
 
@@ -797,6 +800,10 @@ $(document).ready(function () {
       displayMessage({ type: 'warning', message: 'No box files to download.' });
       return;
     }
+    if (lineIsDirty) {
+      displayMessage({ type: 'warning', message: 'Please commit the current line before downloading.' });
+      return;
+    }
     sortAllBoxes()
     var content = '';
     if (boxFileType == BoxFileType.CHAR_OR_LINE) {
@@ -878,7 +885,7 @@ $(document).ready(function () {
 
 
   $('#nextBB').on('click', getNextAndFill);
-  $('#updateText').on('click', submitText);
+  // $('#updateText').on('click', submitText);
 
 
   $('#previousBB').on('click', getPrevAndFill);

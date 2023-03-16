@@ -537,13 +537,37 @@ async function setButtonsEnabledState(state) {
   if (state) {
     $('#boxFile').prop('disabled', false);
     $('#downloadBtn').removeClass('disabled');
+    $('#x1').prop('disabled', false);
+    $('#y1').prop('disabled', false);
+    $('#x2').prop('disabled', false);
+    $('#y2').prop('disabled', false);
+    $('#previousBB').removeClass('disabled');
+    $('#nextBB').removeClass('disabled');
+    $('#updateText').removeClass('disabled');
+    $('#myInputContainer').removeClass('disabled');
+    $('#formtxt').prop('disabled', false);
+    $('#taggingSegment').removeClass('disabled');
   } else {
     $('#boxFile').prop('disabled', true);
     $('#downloadBtn').addClass('disabled');
+    $('#x1').prop('disabled', true);
+    $('#y1').prop('disabled', true);
+    $('#x2').prop('disabled', true);
+    $('#y2').prop('disabled', true);
+    $('#previousBB').addClass('disabled');
+    $('#nextBB').addClass('disabled');
+    $('#updateText').addClass('disabled');
+    $('#myInputContainer').addClass('disabled');
+    $('#formtxt').prop('disabled', true);
+    $('#taggingSegment').addClass('disabled');
   }
 }
 
-function updateProgressBar() {
+function updateProgressBar(options = {}) {
+  if (options.reset) {
+    $('#editingProgress .label').text('');
+    return;
+  }
   // get all lines with text
   var linesWithText = boxdata.filter(function (el) {
     return el.text != '';
@@ -570,6 +594,7 @@ async function loadImageFile(e) {
     }
   }
   setButtonsEnabledState(false);
+  updateProgressBar({ reset: true });
   var file, img;
 
 
@@ -720,6 +745,7 @@ var drawControl = new L.Control.Draw({
 
 
 $(document).ready(function () {
+  $('#imageFile').prop('disabled', false);
   displayMessage({ message: 'Click the question mark in the top right corner for help and keyboard shortcuts.' });
 
   $('.big.question.circle.icon')

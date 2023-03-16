@@ -76,7 +76,7 @@
             <div class="two fields">
               <div class="field">
                 <label for="imageFile">Image</label>
-                <input class="form-control" type="file" id="imageFile" name="imageFile" />
+                <input class="form-control" type="file" disabled id="imageFile" name="imageFile" />
               </div>
               <div class="field">
                 <label for="boxFile">Box File</label>
@@ -99,7 +99,7 @@
         </div>
       </div>
     </div>
-    <div class="ui secondary segment">
+    <div id="taggingSegment" class="ui disabled secondary segment">
       <div id="main-edit-area" class="ui basic fitted segment">
         <div class="ui maprow fitted segment" id="mapid"></div>
         <!-- TODO: add attached progress bar -->
@@ -108,14 +108,14 @@
           <div class="label"></div>
         </div>
         <form class="ui form" id="updateTxt">
-          <div id="myInputContainer" class="field">
+          <div id="myInputContainer" class="disabled field">
             <label class="col-sm-2 control-label" for="formtxt" id="txtlabel">Text</label>
             <div id="myInputBackground">&nbsp;</div>
             <!-- <input type="text" id="forsmtxt" boxid="" name="txt" value="" onkeyup="updateBackground()"> -->
           </div>
           <div class="field">
             <label class="col-sm-2 control-label" for="formtxt" id="txtlabel">Text</label>
-            <input type="text" id="formtxt" boxid="" name="txt" value="" onkeydown="setLineIsDirty()"
+            <input disabled type="text" id="formtxt" boxid="" name="txt" value="" onkeydown="setLineIsDirty()"
               onkeyup="updateBackground()">
 
         </form>
@@ -128,32 +128,32 @@
           <div class="four fields">
             <div class="field">
               <label for="x1">Left</label>
-              <input type="number" id="x1" name="x1" value="">
+              <input disabled type="number" id="x1" name="x1" value="">
             </div>
             <div class="field">
               <label for="y1">Bottom</label>
-              <input type="number" id="y1" name="y1" value="">
+              <input disabled type="number" id="y1" name="y1" value="">
             </div>
             <div class="field">
               <label for="x2">Right</label>
-              <input type="number" id="x2" name="x2" value="">
+              <input disabled type="number" id="x2" name="x2" value="">
             </div>
             <div class="field">
               <label for="y2">Top</label>
-              <input type="number" id="y2" name="y2" value="">
+              <input disabled type="number" id="y2" name="y2" value="">
             </div>
           </div>
         </form>
       </div>
       <div class="ui center aligned basic segment">
-        <button id="previousBB" class="ui labeled icon button">
+        <button id="previousBB" class="ui disabled left labeled icon button">
           <i class="left chevron icon"></i>
           Previous
         </button>
 
-        <button id="updateText" class="ui button" type="submit">Update Line</button>
+        <button id="updateText" class="ui disabled button" type="submit">Update Line</button>
 
-        <button id="nextBB" class="ui right labeled icon button">
+        <button id="nextBB" class="ui disabled right labeled icon button">
           Next
           <i class="right chevron icon"></i>
         </button>

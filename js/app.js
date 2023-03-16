@@ -651,6 +651,8 @@ async function loadImageFile(e) {
       $('#imageFile').val(imageFileNameForButton);
     };
     img.src = _URL.createObjectURL(file);
+    // TODO: fix issue with text input not being focused after loading image
+
     // focus text input
     $('#formtxt').focus();
   }

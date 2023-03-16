@@ -5,29 +5,34 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
   <title>Box Editor for Tesseract | Beta</title>
-  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 
-  <!-- Include all compiled plugins (below), or include individual files as needed -->
-  <!--     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script> -->
-  <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
-  <script src="js/leaflet.draw.js"></script>
-  <script src="js/jquery.hotkeys.js"></script>
-  <!-- <script src="js/fomantic.min.js"></script> -->
-  <script src='https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js'></script>
-  <script src="js/app.js"></script>
-  <!-- Fomanic UI -->
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script> -->
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
-  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
+  <script src="js/jquery.hotkeys.js"></script>
+
+  <!-- Leaftlet -->
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+  <script src="js/leaflet.js"></script>
+  <link rel="stylesheet" href="css/leaflet.css">
+
+  <!-- Leaflet Draw -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.3/leaflet.draw.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.3/leaflet.draw.js"></script>
+  <!-- <script src="js/leaflet.draw.js"></script>
+  <link rel="stylesheet" href="css/leaflet.draw.css" /> -->
+
+  <!-- Tesseract -->
+  <script src='https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js'></script>
+
+  <!-- Fomanic UI -->
   <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
-  <!-- Bootstrap -->
-  <!--     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"> -->
-  <!-- <link rel="stylesheet" href="css/bootstrap.min.css" /> -->
-  <!-- <link rel="stylesheet" href="css/semantic.min.css" /> -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
-  <link rel="stylesheet" href="css/leaflet.draw.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
+
+  <!-- Custom JS and CSS -->
+  <script src="js/app.js"></script>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 
@@ -110,7 +115,8 @@
           </div>
           <div class="field">
             <label class="col-sm-2 control-label" for="formtxt" id="txtlabel">Text</label>
-            <input type="text" id="formtxt" boxid="" name="txt" value="" onkeydown="setLineIsDirty()" onkeyup="updateBackground()">
+            <input type="text" id="formtxt" boxid="" name="txt" value="" onkeydown="setLineIsDirty()"
+              onkeyup="updateBackground()">
 
         </form>
       </div>

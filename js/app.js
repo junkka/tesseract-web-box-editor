@@ -18,7 +18,7 @@ var _URL = window.URL || window.webkitURL,
   imageLoaded = false,
   boxdataLoaded = false,
   selectedBox,
-  zoomMax = 1,
+  zoomMax = 2,
   image;
 
 function getBoxFileType(boxContent) {
@@ -82,7 +82,7 @@ function getNextBB(box) {
 
 function fillAndFocusRect(box) {
   setFromData(box);
-  focusRect(box.polyid);
+  focusBoxID(box.polyid);
 }
 
 function setStyle(rect) {
@@ -98,15 +98,19 @@ function removeStyle(rect) {
   }
 }
 
-function focusRect(id) {
-  removeStyle(selectedPoly)
-  var rect = boxlayer.getLayer(id);
+function focusRectangle(rect) {
   disableEdit(rect);
-  var recb = rect.getBounds()
-  map.fitBounds(recb, { maxZoom: zoomMax });
+  map.fitBounds(rect.getBounds(), { maxZoom: zoomMax, animate: true, padding: [10,10] });
+  // map.flyToBounds(rect.getBounds(), { duration: 0.1});
   // set style
   selectedPoly = rect
   setStyle(rect)
+}
+
+function focusBoxID(id) {
+  removeStyle(selectedPoly)
+  var rect = boxlayer.getLayer(id);
+  focusRectangle(rect)
   $('#formtxt').focus();
 }
 
@@ -229,8 +233,8 @@ function onRectClick(event) {
   //     var nearest = leafletKnn(boxlayer).nearest(L.latLng(point[0], point[1]), 5);
   //     console.log(nearest)
   removeStyle(selectedPoly)
-  map.fitBounds(rect.getBounds(), { maxZoom: zoomMax + 5 });
-  setStyle(rect)
+  focusRectangle(rect)
+  // setStyle(rect)
   disableEdit(rect);
   enableEdit(rect);
 
@@ -255,14 +259,14 @@ function getNextAndFill() {
   setFromData(box);
 
   clearTimeout(movingTimer);
-  movingTimer = setTimeout(focusRect, doneMovingInterval, box.polyid);
+  movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid);
 }
 
 function getPrevAndFill() {
   var box = getPrevtBB(selectedBox);
   setFromData(box);
   clearTimeout(movingTimer);
-  movingTimer = setTimeout(focusRect, doneMovingInterval, box.polyid);
+  movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid);
 }
 
 function onBoxInputChange(e) {
@@ -692,6 +696,26 @@ function displayMessage(object) {
   });
 }
 
+var zoomControl = new L.Control.Zoom({
+  position: 'topright'
+});
+
+var drawControl = new L.Control.Draw({
+  draw: {
+    polygon: false,
+    marker: false,
+    circle: false,
+    polyline: false,
+    rectangle: true,
+    circlemarker: false,
+  },
+  position: 'topright',
+  edit: {
+    featureGroup: boxlayer,
+    edit: false,
+    remove: true,
+  }
+});
 
 
 
@@ -709,32 +733,20 @@ $(document).ready(function () {
       return false;
     }
   });
-  var zoomControl = new L.Control.Zoom({
-    position: 'topright'
-  });
-  var drawControl = new L.Control.Draw({
-    draw: {
-      polygon: false,
-      marker: false,
-      circle: false,
-      polyline: false,
-      rectangle: true,
-    },
-    position: 'topright',
-    edit: {
-      featureGroup: boxlayer,
-      edit: false,
-      remove: true,
-    }
-  });
+
 
   map = new L.map('mapid', {
     crs: L.CRS.Simple,
     minZoom: -1,
-    zoomSnap: 1,
-    // scrollWheelZoom: false,
+    center: [0, 0],
+    zoom: 0,
+    zoomSnap: .25,
+    scrollWheelZoom: true,
     touchZoom: true,
     zoomControl: false,
+    drawControl: false,
+    attributionControl: false,
+    preferCanvas: true,
     maxBoundsViscosity: .5,
   });
 

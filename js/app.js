@@ -1004,6 +1004,10 @@ $(document).ready(async function () {
 
 
 function showCharInfoPopup(e) {
+  // prevent modifier keys from triggering popup
+  if (e.ctrlKey || e.altKey || e.metaKey) {
+    return;
+  }
   var selection;
 
   if (window.getSelection) {

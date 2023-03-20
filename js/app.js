@@ -675,26 +675,50 @@ var latin_pattern = /[\u0000-\u007F\u0080-\u00FF]/;
 
 // Function to colorize text
 function colorize(text) {
-  // TODO: maybe could use Fomantic-UI colors
-  // <span class="ui info text">[text]</span>
   var colored_text = '';
   if (text == '') {
     return '&nbsp;'
   }
+  // Normalize text to decomposed form
+  text = text.normalize('NFD');
+  var current_script = null;
+  var current_span = '';
   for (var i = 0; i < text.length; i++) {
     var char = text.charAt(i);
     if (cyrillic_pattern.test(char)) {
-      colored_text += '<span class="cyrillic">' + char + '</span>';
+      if (current_script == 'cyrillic') {
+        current_span += char;
+      } else {
+        colored_text += '</span>' + current_span;
+        current_span = '<span class="cyrillic">' + char;
+        current_script = 'cyrillic';
+      }
     } else if (char == ' ') {
-      colored_text += '&nbsp;';
+      if (current_script == 'space') {
+        current_span += '&nbsp;';
+      } else {
+        colored_text += '</span>' + current_span;
+        current_span = '&nbsp;';
+        current_script = 'space';
+      }
     } else if (latin_pattern.test(char)) {
-      colored_text += '<span class="latin">' + char + '</span>';
+      if (current_script == 'latin') {
+        current_span += char;
+      } else {
+        colored_text += '</span>' + current_span;
+        current_span = '<span class="latin">' + char;
+        current_script = 'latin';
+      }
     } else {
-      colored_text += char;
+      colored_text += '</span>' + current_span + char;
+      current_span = '';
+      current_script = null;
     }
   }
+  colored_text += '</span>' + current_span;
   return colored_text;
 }
+
 
 function setLineIsDirty() {
   lineIsDirty = true;

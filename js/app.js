@@ -781,7 +781,7 @@ var drawControl = new L.Control.Draw({
 
 $(document).ready(function () {
   $('#imageFile').prop('disabled', false);
-  displayMessage({ message: 'Click the question mark in the top right corner for help and keyboard shortcuts.' });
+  displayMessage({ message: 'Hover over the question mark in the top right corner for help and keyboard shortcuts.' });
 
   $('.big.question.circle.icon')
     .popup({

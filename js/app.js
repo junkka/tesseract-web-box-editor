@@ -808,10 +808,10 @@ var drawControl = new L.Control.Draw({
 
 function formatForPopup(objects) {
   var formatted = '<div class="ui compact grid">';
-  formatted += '<div class="two column stretched row">' + '<div class="twelve wide left floated column">' + '<b>Name</b>' + '</div>' + '<div class="four wide right floated column">' + '<b>Char</b>' + '</div>' + '</div>';
+  formatted += '<div class="two column stretched row">' + '<div class="twelve wide left floated column">' + '<b>Name</b>' + '</div>' + '<div class="two wide right floated column">' + '<b>Char</b>' + '</div>' + '</div>';
   for (var i = 0; i < objects.length; i++) {
     var object = objects[i];
-    formatted += '<div class="two column stretched row">' + '<div class="twelve wide left floated column">' + object.name + '</div>' + '<div class="four wide right floated column">' + object.char + '</div>' + '</div>';
+    formatted += '<div class="two column stretched row">' + '<div class="twelve wide left floated column">' + object.name + '</div>' + '<div class="two wide right floated column">' + object.char + '</div>' + '</div>';
   }
   formatted += '</div>';
   return formatted;

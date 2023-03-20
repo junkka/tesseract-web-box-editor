@@ -7,6 +7,7 @@ var boxFileName;
 var boxFileNameForButton;
 var boxdataIsDirty = false;
 var lineIsDirty = false;
+var unicodeData;
 
 boxActive = {
   color: 'red',
@@ -26,6 +27,7 @@ boxVisited = {
   stroke: false,
   fillOpacity: 0.3
 }
+
 
 var _URL = window.URL || window.webkitURL,
   h,
@@ -747,7 +749,6 @@ window.onbeforeunload = function () {
   }
 }
 
-
 function setLineIsDirty() {
   lineIsDirty = true;
 }
@@ -805,9 +806,51 @@ var drawControl = new L.Control.Draw({
   }
 });
 
+function formatForPopup(objects) {
+  var formatted = '<div class="ui compact grid">';
+  formatted += '<div class="two column stretched row">' + '<div class="twelve wide left floated column">' + '<b>Name</b>' + '</div>' + '<div class="four wide right floated column">' + '<b>Char</b>' + '</div>' + '</div>';
+  for (var i = 0; i < objects.length; i++) {
+    var object = objects[i];
+    formatted += '<div class="two column stretched row">' + '<div class="twelve wide left floated column">' + object.name + '</div>' + '<div class="four wide right floated column">' + object.char + '</div>' + '</div>';
+  }
+  formatted += '</div>';
+  return formatted;
+}
 
 
-$(document).ready(function () {
+// get all unicode info of characters in string
+function getUnicodeInfo(string) {
+  var unicodeInfo = [];
+  string = string.normalize('NFD');
+  for (var i = 0; i < string.length; i++) {
+    var char = string.charAt(i);
+    var code = char.charCodeAt(0);
+    var hex = code.toString(16).toUpperCase();
+    var unicode = '0000'.substring(hex.length) + hex;
+    result = getUnicodeData(unicode);
+    // push if not already in array
+    if (unicodeInfo.find(function (x) {
+      return x['code'] == result.code;
+    }
+    ) == undefined) {
+      unicodeInfo.push(result);
+    }
+
+  }
+  return unicodeInfo;
+}
+
+// get object with code from unicodeData
+function getUnicodeData(code) {
+  result = unicodeData.find(function (x) {
+    return x['code'] == code;
+  });
+  result.char = String.fromCharCode(parseInt(code, 16));
+  return result;
+}
+
+
+$(document).ready(async function () {
   $('#imageFile').prop('disabled', false);
   displayMessage({ message: 'Hover over the question mark in the top right corner for help and keyboard shortcuts.' });
 
@@ -940,11 +983,61 @@ $(document).ready(function () {
 
   $('#nextBB').on('click', getNextAndFill);
   // $('#updateText').on('click', submitText);
-
-
   $('#previousBB').on('click', getPrevAndFill);
 
+  await $.ajax({
+    url: 'assets/unicodeData.csv',
+    dataType: 'text',
+    success: function (data) {
+      parsedData = $.csv.toObjects(data, {
+        separator: ';',
+        delimiter: '"'
+      });
+      unicodeData = parsedData;
+    }
+  });
 
-
-
+  // when text inside #formtxt is selected
+  $('#formtxt').bind('mouseup', showCharInfoPopup);
+  $('#formtxt').bind('keyup', showCharInfoPopup);
 });
+
+
+function showCharInfoPopup(e) {
+  var selection;
+
+  if (window.getSelection) {
+    selection = window.getSelection();
+  } else if (document.selection) {
+    selection = document.selection.createRange();
+  }
+  results = getUnicodeInfo(selection.toString());
+  if (results.length == 0 || results.length > 5) {
+  // if (selection.toString().length == 0 || selection.toString().length > 5) {
+    $('#updateTxt').popup('hide');
+    return;
+  } else {
+    formatted = formatForPopup(results);
+
+    if ($('#updateTxt').popup('is visible')) {
+      $('#updateTxt')
+        .popup(
+          'change content (html)', formatted
+        )
+    } else if ($('#updateTxt').popup('is hidden')) {
+      $('#updateTxt')
+        .popup(
+          {
+            on: 'manual',
+            // hoverable: false,
+            'html': formatted,
+            // target: e.target,
+          })
+        .popup('show')
+    } else {
+      console.log('error with char info popup');
+    }
+  }
+
+
+}

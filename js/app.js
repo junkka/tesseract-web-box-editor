@@ -740,6 +740,13 @@ function colorize(text) {
   return colored_text;
 }
 
+// warn user if they try to leave page with unsaved changes
+window.onbeforeunload = function () {
+  if (boxdataIsDirty || lineIsDirty) {
+    return 'You have unsaved changes. Are you sure you want to leave?';
+  }
+}
+
 
 function setLineIsDirty() {
   lineIsDirty = true;

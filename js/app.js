@@ -7,6 +7,26 @@ var boxFileName;
 var boxFileNameForButton;
 var boxdataIsDirty = false;
 var lineIsDirty = false;
+
+boxActive = {
+  color: 'red',
+  weight: 3,
+  stroke: true,
+  opacity: 0.5,
+  fillOpacity: 0
+}
+boxInactive = {
+  color: 'gray',
+  stroke: true,
+  weight: 1,
+  opacity: 0.5
+}
+boxVisited = {
+  color: 'green',
+  stroke: false,
+  fillOpacity: 0.3
+}
+
 var _URL = window.URL || window.webkitURL,
   h,
   w,
@@ -87,20 +107,20 @@ function fillAndFocusRect(box) {
 
 function setStyle(rect) {
   if (rect) {
-    rect.setStyle({ color: 'red', fillOpacity: 0 })
+    rect.setStyle(boxActive)
   }
 
 }
 
 function removeStyle(rect) {
   if (rect) {
-    rect.setStyle({ color: 'blue', opacity: 0.5, fillOpacity: 0.1 })
+    rect.setStyle(boxVisited)
   }
 }
 
 function focusRectangle(rect) {
   disableEdit(rect);
-  map.fitBounds(rect.getBounds(), { maxZoom: zoomMax, animate: true, padding: [10,10] });
+  map.fitBounds(rect.getBounds(), { maxZoom: zoomMax, animate: true, padding: [10, 10] });
   // map.flyToBounds(rect.getBounds(), { duration: 0.1});
   // set style
   selectedPoly = rect
@@ -140,7 +160,7 @@ function processFile(e) {
               y2: parseInt(temp[4])
             }
             var rect = new L.rectangle([[symbole.y1, symbole.x1], [symbole.y2, symbole.x2]]);
-
+            rect.setStyle(boxInactive);
             rect.on('edit', editRect);
             rect.on('click', onRectClick);
             // addLayer
@@ -181,7 +201,7 @@ function processFile(e) {
             // }
           }
           var rect = new L.rectangle([[symbole.y1, symbole.x1], [symbole.y2, symbole.x2]]);
-
+          rect.setStyle(boxInactive)
           rect.on('edit', editRect);
           rect.on('click', onRectClick);
           // addLayer
@@ -234,7 +254,7 @@ function onRectClick(event) {
   //     console.log(nearest)
   removeStyle(selectedPoly)
   focusRectangle(rect)
-  // setStyle(rect)
+  setStyle(rect)
   disableEdit(rect);
   enableEdit(rect);
 
@@ -447,6 +467,7 @@ async function generateInitialBoxes(image) {
     var rect = new L.rectangle([[symbole.y1, symbole.x1], [symbole.y2, symbole.x2]]);
     rect.on('edit', editRect);
     rect.on('click', onRectClick);
+    rect.setStyle(boxInactive);
     // addLayer
 
     boxlayer.addLayer(rect);

@@ -720,10 +720,27 @@ async function loadImageFile(e) {
       $('#imageFile').val(imageFileNameForButton);
     };
     img.src = _URL.createObjectURL(file);
+
+    updateDownloadButtonsLabels({boxDownloadButton: imageFileName+'.box', groundTruthDownloadButton: imageFileName+'.gt.txt'});
     // TODO: fix issue with text input not being focused after loading image
 
     // focus text input
     $('#formtxt').focus();
+  }
+}
+
+function updateDownloadButtonsLabels(options = {}) {
+  if (options.boxDownloadButton) {
+    $('#downloadBoxFileButton').html('<i class = "download icon"></i>' + options.boxDownloadButton)
+    $('#downloadBoxFileButton').css('white-space', 'nowrap');
+  } else {
+    $('#downloadBoxFileButton').html('<i class = "download icon"></i>Download')
+  }
+  if (options.groundTruthDownloadButton) {
+    $('#downloadGroundTruthButton').html('<i class = "download icon"></i>' + options.groundTruthDownloadButton)
+    $('#downloadGroundTruthButton').css('white-space', 'nowrap');
+  } else {
+    $('#downloadGroundTruthButton').html('<i class = "download icon"></i>Download')
   }
 }
 

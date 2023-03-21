@@ -433,11 +433,12 @@ async function generateInitialBoxes(image) {
   boxdata = [];
 
   const worker = await Tesseract.createWorker({
-    // corePath: '/tesseract-core-simd.wasm.js',
-    // workerPath: "/dist/worker.dev.js"
+    langPath: '../assets',
+    gzip: false,
+    logger: m => console.log(m)
   });
-  await worker.loadLanguage('eng+rus');
-  await worker.initialize('eng+rus');
+  await worker.loadLanguage('LATCYR_from_Cyrillic');
+  await worker.initialize('LATCYR_from_Cyrillic');
   // await worker.setParameters({
   //   tessedit_ocr_engine_mode: OcrEngineMode.OEM_LSTM_ONLY,
   //   tessedit_pageseg_mode: PSM_AUTO_OSD
@@ -455,8 +456,8 @@ async function generateInitialBoxes(image) {
     boxes.push([text, box.x0, box.y0, box.x1, box.y1]);
     // console.log(text, box)
     var symbole = {
-      // text: text,
-      text: '',
+      text: text,
+      // text: '',
       // x1: box.x0,
       // y1: image.height - box.y0,
       // x2: box.x1,

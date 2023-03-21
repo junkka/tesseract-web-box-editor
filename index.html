@@ -89,13 +89,21 @@
           </form>
         </div>
         <div class="six wide column">
-          <h4 class="ui dividing header">Download Document</h4>
-          <form class="ui form">
-            <div class="field">
-              <label for="download">Box File</label>
-              <div id="downloadBtn" name="download" class="disabled ui labeled icon button">
-                Download
-                <i class="download icon"></i>
+          <h4 class="ui dividing header">Download Documents</h4>
+          <form class="ui equal width form">
+            <div class="equal width fields">
+              <div class="fluid field">
+                <label for="download">Box File</label>
+                <div id="downloadBoxFileButton" name="download" class="disabled ui labeled icon button">
+                  Download
+                  <i class="download icon"></i>
+                </div>
+              </div>
+              <div class="four wide field">
+                <label for="download">Ground Truth</label>
+                <div id="downloadGroundTruthButton" name="download" class="disabled ui icon button">
+                  <i class="download icon"></i>
+                </div>
               </div>
             </div>
           </form>
@@ -121,73 +129,74 @@
               onkeyup="updateBackground()">
           </div>
         </form>
-      <div class="ui mini blue empty circular label"></div>
-      Latin
-      <div class="ui mini red empty circular label"></div> Cyrillic
-      <div class="ui basic fitted segment">
-        <form id="formbox" class="ui form">
-          <div class="four fields">
-            <div class="field">
-              <label for="x1">Left</label>
-              <input disabled type="number" id="x1" name="x1" value="">
-            </div>
-            <div class="field">
-              <label for="y1">Bottom</label>
-              <input disabled type="number" id="y1" name="y1" value="">
-            </div>
-            <div class="field">
-              <label for="x2">Right</label>
-              <input disabled type="number" id="x2" name="x2" value="">
-            </div>
-            <div class="field">
-              <label for="y2">Top</label>
-              <input disabled type="number" id="y2" name="y2" value="">
-            </div>
-          </div>
-        </form>
-      </div>
-      <div class="ui center aligned basic segment">
-        <button id="previousBB" class="ui disabled left labeled icon button">
-          <i class="left chevron icon"></i>
-          Previous
-        </button>
-
-        <!-- <button id="updateText" class="ui disabled button" type="submit">Update Line</button> -->
-
-        <button id="nextBB" class="ui disabled right labeled icon button">
-          Next
-          <i class="right chevron icon"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-  <div class="ui container">
-    <div class="ui basic fitted segments">
-      <div class="ui horizontal basic segments">
+        <div class="ui mini blue empty circular label"></div>
+        Latin
+        <div class="ui mini red empty circular label"></div> Cyrillic
         <div class="ui basic fitted segment">
-          <div class="ui horizontal small list">
-            <div class="item">
-              By: <a href="https://penteliuc.com">Marius E. Penteliuc</a>
+          <form id="formbox" class="ui form">
+            <div class="four fields">
+              <div class="field">
+                <label for="x1">Left</label>
+                <input disabled type="number" id="x1" name="x1" value="">
+              </div>
+              <div class="field">
+                <label for="y1">Bottom</label>
+                <input disabled type="number" id="y1" name="y1" value="">
+              </div>
+              <div class="field">
+                <label for="x2">Right</label>
+                <input disabled type="number" id="x2" name="x2" value="">
+              </div>
+              <div class="field">
+                <label for="y2">Top</label>
+                <input disabled type="number" id="y2" name="y2" value="">
+              </div>
             </div>
-            <div class="item">
-              Originally: <a href="https://johanjunkka.com">Johan Junkka</a>
-            </div>
-          </div>
+          </form>
         </div>
-        <div class="ui right aligned basic fitted segment">
-          <a href="https://github.com/mariuspenteliuc/box-editor-for-tesseract" target="_blank">
-            <i class="github icon"></i>
-          </a>
+        <div class="ui center aligned basic segment">
+          <button id="previousBB" class="ui disabled left labeled icon button">
+            <i class="left chevron icon"></i>
+            Previous
+          </button>
+
+          <!-- <button id="updateText" class="ui disabled button" type="submit">Update Line</button> -->
+
+          <button id="nextBB" class="ui disabled right labeled icon button">
+            Next
+            <i class="right chevron icon"></i>
+          </button>
         </div>
-      </div>
-      <div class="ui basic horizontally fitted segment">
-        <p>This work was supported by a grant of the Romanian Ministry of Research, Innovation and Digitization, CCCDI -
-          UEFISCDI,
-          project number PN-III-P2-2.1-PED-2021-0693, within PNCDI III.</p>
       </div>
     </div>
+    <div class="ui container">
+      <div class="ui basic fitted segments">
+        <div class="ui horizontal basic segments">
+          <div class="ui basic fitted segment">
+            <div class="ui horizontal small list">
+              <div class="item">
+                By: <a href="https://penteliuc.com">Marius E. Penteliuc</a>
+              </div>
+              <div class="item">
+                Originally: <a href="https://johanjunkka.com">Johan Junkka</a>
+              </div>
+            </div>
+          </div>
+          <div class="ui right aligned basic fitted segment">
+            <a href="https://github.com/mariuspenteliuc/box-editor-for-tesseract" target="_blank">
+              <i class="github icon"></i>
+            </a>
+          </div>
+        </div>
+        <div class="ui basic horizontally fitted segment">
+          <p>This work was supported by a grant of the Romanian Ministry of Research, Innovation and Digitization, CCCDI
+            -
+            UEFISCDI,
+            project number PN-III-P2-2.1-PED-2021-0693, within PNCDI III.</p>
+        </div>
+      </div>
 
-  </div>
+    </div>
 
   </div>
   </div>

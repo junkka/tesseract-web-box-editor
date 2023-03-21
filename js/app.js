@@ -579,7 +579,8 @@ async function loadBoxFile(e) {
 async function setButtonsEnabledState(state) {
   if (state) {
     $('#boxFile').prop('disabled', false);
-    $('#downloadBtn').removeClass('disabled');
+    $('#downloadBoxFileButton').removeClass('disabled');
+    $('#downloadGroundTruthButton').removeClass('disabled');
     $('#x1').prop('disabled', false);
     $('#y1').prop('disabled', false);
     $('#x2').prop('disabled', false);
@@ -593,7 +594,8 @@ async function setButtonsEnabledState(state) {
 
   } else {
     $('#boxFile').prop('disabled', true);
-    $('#downloadBtn').addClass('disabled');
+    $('#downloadBoxFileButton').addClass('disabled');
+    $('#downloadGroundTruthButton').addClass('disabled');
     $('#x1').prop('disabled', true);
     $('#y1').prop('disabled', true);
     $('#x2').prop('disabled', true);
@@ -935,8 +937,7 @@ $(document).ready(async function () {
   //   load Image
   $("#imageFile").change(loadImageFile);
 
-
-  $('#downloadBtn').on('click', async function (e) {
+  $('#downloadBoxFileButton').on('click', async function (e) {
     if (boxdata.length == 0) {
       displayMessage({ type: 'warning', message: 'No box files to download.' });
       return;
@@ -946,6 +947,7 @@ $(document).ready(async function () {
       return;
     }
     sortAllBoxes()
+    var fileExtension = '.box'
     var content = '';
     if (boxFileType == BoxFileType.CHAR_OR_LINE) {
       $.each(boxdata, function () {
@@ -958,19 +960,31 @@ $(document).ready(async function () {
         content = content + '\t ' + (this.x2 + 1) + ' ' + this.y1 + ' ' + (this.x2 + 5) + ' ' + this.y2 + ' 0\n';
       })
     }
-
-    var element = document.createElement('a');
-    element.href = 'data:application/text;charset=utf-8,' + encodeURIComponent(content);
-    element.download = imageFileName + '.box';
-    element.target = '_blank';
-    element.style.display = 'none';
-
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    displayMessage({ message: 'Downloaded ' + imageFileName + '.box', type: 'success' });
-    boxdataIsDirty = false;
-
+    downloadFile(content, fileExtension);
+  });
+  $('#downloadGroundTruthButton').on('click', async function (e) {
+    if (boxdata.length == 0) {
+      displayMessage({ type: 'warning', message: 'No ground-truth to download.' });
+      return;
+    }
+    if (lineIsDirty) {
+      displayMessage({ type: 'warning', message: 'Please commit the current line before downloading.' });
+      return;
+    }
+    sortAllBoxes()
+    var fileExtension = '.gt.txt'
+    var content = '';
+    if (boxFileType == BoxFileType.CHAR_OR_LINE) {
+      $.each(boxdata, function () {
+        content = content + this.text + '\n'
+      })
+    }
+    if (boxFileType == BoxFileType.WORDSTR) {
+      $.each(boxdata, function () {
+        content = content + this.text + '\n';
+      })
+    }
+    downloadFile(content, fileExtension);
   });
 
   // delete rect
@@ -1046,6 +1060,20 @@ $(document).ready(async function () {
   $('#formtxt').bind('keyup', showCharInfoPopup);
 });
 
+
+function downloadFile(content, fileExtension) {
+  var element = document.createElement('a');
+  element.href = 'data:application/text;charset=utf-8,' + encodeURIComponent(content);
+  element.download = imageFileName + fileExtension;
+  element.target = '_blank';
+  element.style.display = 'none';
+
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+  displayMessage({ message: 'Downloaded ' + imageFileName + fileExtension, type: 'success' });
+  boxdataIsDirty = false;
+}
 
 function showCharInfoPopup(e) {
   // prevent modifier keys from triggering popup

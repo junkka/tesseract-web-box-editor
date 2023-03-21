@@ -444,7 +444,9 @@ async function generateInitialBoxes(image) {
   boxdata = [];
 
   const worker = await Tesseract.createWorker({
-    langPath: '../assets',
+    // langPath as relative path to the worker script
+
+    langPath: '/assets',
     gzip: false,
     logger: m => processWorkerLogMessage(m)
   });

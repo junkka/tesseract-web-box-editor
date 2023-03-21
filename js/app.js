@@ -70,7 +70,7 @@ function setFromData(d) {
   $('#formtxt').focus();
   updateBackground();
   lineIsDirty = false;
-  updateProgressBar();
+  updateProgressBar({ type: 'tagging' });
 }
 
 function getPrevtBB(box) {
@@ -357,7 +357,7 @@ function updateBoxdata(id, d) {
   // remember stuff is dirty
   boxdataIsDirty = true;
   lineIsDirty = false;
-  updateProgressBar();
+  updateProgressBar({ type: 'tagging' });
 }
 
 function disableEdit(rect) {
@@ -423,6 +423,17 @@ function setMainLoadingStatus(status) {
   }
 }
 
+// process worker log messages
+function processWorkerLogMessage(message) {
+  // console.log(message.status, message.progress);
+  if (message.status == 'recognizing text') {
+    message.type = 'ocr';
+  } else {
+    message.type = 'initializingWorker';
+  }
+  updateProgressBar(message);
+}
+
 async function generateInitialBoxes(image) {
   // Set #main-edit-area loading status
   setMainLoadingStatus(true);
@@ -433,11 +444,12 @@ async function generateInitialBoxes(image) {
   boxdata = [];
 
   const worker = await Tesseract.createWorker({
-    // corePath: '/tesseract-core-simd.wasm.js',
-    // workerPath: "/dist/worker.dev.js"
+    langPath: '../assets',
+    gzip: false,
+    logger: m => processWorkerLogMessage(m)
   });
-  await worker.loadLanguage('eng+rus');
-  await worker.initialize('eng+rus');
+  await worker.loadLanguage('LATCYR_from_Cyrillic');
+  await worker.initialize('LATCYR_from_Cyrillic');
   // await worker.setParameters({
   //   tessedit_ocr_engine_mode: OcrEngineMode.OEM_LSTM_ONLY,
   //   tessedit_pageseg_mode: PSM_AUTO_OSD
@@ -598,21 +610,51 @@ function updateProgressBar(options = {}) {
     $('#editingProgress .label').text('');
     return;
   }
-  // get all lines with text
-  var linesWithText = boxdata.filter(function (el) {
-    return el.text != '';
-  });
 
-
-  $('#editingProgress')
-    .progress({
-      value: linesWithText.length,
-      total: boxdata.length,
-      text: {
-        active: '{value} of {total} boxes'
-      }
-    })
-    ;
+  if (options.type == 'tagging') {
+    // remove indicating and active class from #editingProgress
+    $('#editingProgress').removeClass('active');
+    $('#editingProgress').removeClass('indicating');
+    // get all lines with text
+    var linesWithText = boxdata.filter(function (el) {
+      return el.text != '';
+    });
+    $('#editingProgress')
+      .progress({
+        value: linesWithText.length,
+        total: boxdata.length,
+        text: {
+          active: 'Filled {value} of {total} boxes.'
+        }
+      })
+      ;
+    return;
+  } else {
+    // add indicating class to #editingProgress
+    $('#editingProgress').addClass('indicating');
+    if (options.type == 'ocr') {
+      $('#editingProgress')
+        .progress({
+          value: options.progress,
+          total: 1,
+          text: {
+            active: 'Analyzing Image: {percent}%'
+          }
+        })
+        ;
+      return;
+    } else if (options.type == 'initializingWorker') {
+      $('#editingProgress')
+        .progress({
+          value: 0,
+          total: 1,
+          text: {
+            active: options.status + '…'
+          }
+        })
+        ;
+    }
+  }
 }
 
 async function loadImageFile(e) {
@@ -639,7 +681,7 @@ async function loadImageFile(e) {
       result = await generateInitialBoxes(img)
       boxdataIsDirty = false;
       setButtonsEnabledState(true);
-      updateProgressBar();
+      updateProgressBar({ type: 'tagging' });
 
       // console.log(this.width + " " + this.height);
       h = this.height
@@ -1017,7 +1059,7 @@ function showCharInfoPopup(e) {
   }
   results = getUnicodeInfo(selection.toString());
   if (results.length == 0 || results.length > 5) {
-  // if (selection.toString().length == 0 || selection.toString().length > 5) {
+    // if (selection.toString().length == 0 || selection.toString().length > 5) {
     $('#updateTxt').popup('hide');
     return;
   } else {

@@ -70,7 +70,7 @@ function setFromData(d) {
   $('#formtxt').focus();
   updateBackground();
   lineIsDirty = false;
-  updateProgressBar({type: 'tagging'});
+  updateProgressBar({ type: 'tagging' });
 }
 
 function getPrevtBB(box) {
@@ -357,7 +357,7 @@ function updateBoxdata(id, d) {
   // remember stuff is dirty
   boxdataIsDirty = true;
   lineIsDirty = false;
-  updateProgressBar({type: 'tagging'});
+  updateProgressBar({ type: 'tagging' });
 }
 
 function disableEdit(rect) {
@@ -612,6 +612,9 @@ function updateProgressBar(options = {}) {
   }
 
   if (options.type == 'tagging') {
+    // remove indicating and active class from #editingProgress
+    $('#editingProgress').removeClass('active');
+    $('#editingProgress').removeClass('indicating');
     // get all lines with text
     var linesWithText = boxdata.filter(function (el) {
       return el.text != '';
@@ -621,32 +624,36 @@ function updateProgressBar(options = {}) {
         value: linesWithText.length,
         total: boxdata.length,
         text: {
-          active: '{value} of {total} boxes'
+          active: 'Filled {value} of {total} boxes.'
         }
       })
       ;
     return;
-  } else if (options.type == 'ocr') {
-    $('#editingProgress')
-      .progress({
-        value: options.progress,
-        total: 1,
-        text: {
-          active: 'Finding text: {percent}%'
-        }
-      })
-      ;
-    return;
-  } else if (options.type == 'initializingWorker') {
-    $('#editingProgress')
-      .progress({
-        value: 0,
-        total: 1,
-        text: {
-          active: options.status
-        }
-      })
-      ;
+  } else {
+    // add indicating class to #editingProgress
+    $('#editingProgress').addClass('indicating');
+    if (options.type == 'ocr') {
+      $('#editingProgress')
+        .progress({
+          value: options.progress,
+          total: 1,
+          text: {
+            active: 'Analyzing Image: {percent}%'
+          }
+        })
+        ;
+      return;
+    } else if (options.type == 'initializingWorker') {
+      $('#editingProgress')
+        .progress({
+          value: 0,
+          total: 1,
+          text: {
+            active: options.status + '…'
+          }
+        })
+        ;
+    }
   }
 }
 
@@ -674,7 +681,7 @@ async function loadImageFile(e) {
       result = await generateInitialBoxes(img)
       boxdataIsDirty = false;
       setButtonsEnabledState(true);
-      updateProgressBar({type: 'tagging'});
+      updateProgressBar({ type: 'tagging' });
 
       // console.log(this.width + " " + this.height);
       h = this.height

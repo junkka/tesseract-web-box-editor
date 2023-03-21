@@ -61,7 +61,8 @@
   /* display: inline-block; */
 }
 
-#myInputBackground {
+/* TODO: fix issue with special characters not being displayed with proper font */
+#updateTxt #myInputContainer #myInputBackground {
   /* position: absolute; */
   top: 0;
   left: 0;
@@ -101,5 +102,7 @@
   background-color: transparent;
   /* border: none; */
   /* outline: none; */
+  /* font-size: 20px; */
+  /* line-height: 1.21428571em; */
   font-family: Lato, system-ui, -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }

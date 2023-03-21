@@ -626,7 +626,7 @@ function updateProgressBar(options = {}) {
         value: linesWithText.length,
         total: boxdata.length,
         text: {
-          active: 'Filled {value} of {total} boxes.'
+          active: 'Tagging: {value} of {total} lines tagged'
         }
       })
       ;

@@ -467,8 +467,8 @@ async function generateInitialBoxes(image) {
     boxes.push([text, box.x0, box.y0, box.x1, box.y1]);
     // console.log(text, box)
     var symbole = {
-      text: text,
-      // text: '',
+      // text: text,
+      text: '',
       // x1: box.x0,
       // y1: image.height - box.y0,
       // x2: box.x1,

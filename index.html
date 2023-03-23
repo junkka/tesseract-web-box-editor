@@ -54,16 +54,21 @@
           <div class="header">Welcome!</div>
           <div class="content">
             <p>
-              Upload an image and start tagging the text using the form. Bounding boxes will automatically be generated
-              in a few seconds.
+              Upload an image to tag it with the ground truth. Bounding boxes are automatically generated and can be edited. You can also upload an existing <code>.box</code> file to edit it, but the generated bounding boxes will be overwritten.
             </p>
             <p>
-              You can also upload a <code>.box</code> file to start from a previous state, which will discard
-              auto-generated bounding boxes.
+              The progress bar shows the progress of the tagging. When done, download the <code>.box</code> file and the <code>.gt.txt</code> file to use in Tesseract.
             </p>
-            <div class="ui sub header">Keyboard Shortcuts</div>
             <p>
-              While tagging use <code>return</code> and <code>shift+return</code> to move forward and backward.
+              Box handles appear after clicking on it. You can drag them to move the box or resize it. Create boxes using the square tool and delete them using the trash can tool.
+            </p>
+            <div class="ui sub header">Tips</div>
+            <p>
+              Select characters in the input field to see their Unicode name.
+            </p>
+            <p>
+              While tagging use <code>return</code> to commit current line and move forward.
+              <!-- While tagging use <code>return</code> and <code>shift+return</code> to move forward and backward. -->
             </p>
           </div>
         </div>

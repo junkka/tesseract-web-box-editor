@@ -8,6 +8,8 @@ var boxFileNameForButton;
 var boxdataIsDirty = false;
 var lineIsDirty = false;
 var unicodeData;
+var dictionaryMap = {};
+var unvisitedWords = {};
 
 boxActive = {
   color: 'red',
@@ -18,14 +20,14 @@ boxActive = {
 }
 boxInactive = {
   color: 'gray',
-  stroke: true,
-  weight: 1,
-  opacity: 0.5
+  stroke: false,
+  opacity: 0,
+  fillOpacity: 0
 }
 boxVisited = {
   color: 'green',
   stroke: false,
-  fillOpacity: 0.3
+  fillOpacity: 0
 }
 
 
@@ -61,14 +63,9 @@ function getBoxFileType(boxContent) {
 function setFromData(d) {
   selectedBox = d;
   //     console.log(d)
-  $('#formtxt').val(d.text).attr('boxid', d.polyid);
-  // $("#txtlabel").text(d.text);
-  $("#x1").val(d.x1);
-  $("#y1").val(d.y1);
-  $("#x2").val(d.x2);
-  $("#y2").val(d.y2);
-  $('#formtxt').focus();
-  updateBackground();
+  $('#sourceInputField').val(d).attr('boxid', d.polyid);
+  $('#targetInputField').focus();
+  // updateBackground();
   lineIsDirty = false;
   updateProgressBar({ type: 'tagging' });
 }
@@ -103,8 +100,13 @@ function getNextBB(box) {
 }
 
 function fillAndFocusRect(box) {
-  setFromData(box);
-  focusBoxID(box.polyid);
+  setFromData(box.word);
+  // pick random line from box
+  var pick = Math.floor(Math.random() * box.lines.length);
+  var line = box.lines[pick];
+  focusBoxID(line.polyid);
+  clearTimeout(movingTimer);
+  movingTimer = setTimeout(focusBoxID, doneMovingInterval, line.polyid);
 }
 
 function setStyle(rect) {
@@ -204,8 +206,8 @@ function processFile(e) {
           }
           var rect = new L.rectangle([[symbole.y1, symbole.x1], [symbole.y2, symbole.x2]]);
           rect.setStyle(boxInactive)
-          rect.on('edit', editRect);
-          rect.on('click', onRectClick);
+          // rect.on('edit', editRect);
+          // rect.on('click', onRectClick);
           // addLayer
 
           boxlayer.addLayer(rect);
@@ -216,61 +218,25 @@ function processFile(e) {
     }
     map.addLayer(boxlayer);
 
+    unvisitedWords = extractWordsFromBoxdataLines();
+    // remove duplicate words and corresponding mapping
+
 
     $('#formrow').removeClass('hidden');
     // select next BB
-    var nextBB = getNextBB();
-    fillAndFocusRect(nextBB);
-    updateBackground();
+    // var nextBB = getNextBB();
+    pick = pickRandomWord();
+    fillAndFocusRect(pick);
+    // updateBackground();
   }
 }
 
-function editRect(e) {
-  var layer = e.target;
-  var box = getBoxdataFromRect(layer);
-  var newd = {
-    x1: Math.round(layer._latlngs[0][0].lng),
-    y1: Math.round(layer._latlngs[0][0].lat),
-    x2: Math.round(layer._latlngs[0][2].lng),
-    y2: Math.round(layer._latlngs[0][2].lat)
-  }
 
-  updateBoxdata(layer._leaflet_id, newd);
-
-  fillAndFocusRect(box);
-}
-
-function deleteBox(box) {
-  var boxindex = boxdata.findIndex(function (d) {
-    return d.polyid == box.polyid
-  });
-  if (boxindex > -1) {
-    boxdata.splice(boxindex, 1);
-  }
-  return boxindex
-}
-
-function onRectClick(event) {
-  var rect = event.target;
-  //     var nearest = leafletKnn(boxlayer).nearest(L.latLng(point[0], point[1]), 5);
-  //     console.log(nearest)
-  removeStyle(selectedPoly)
-  focusRectangle(rect)
-  setStyle(rect)
-  disableEdit(rect);
-  enableEdit(rect);
-
-  // get boxdatata
-  var bb = getBoxdataFromRect(rect);
-
-  setFromData(bb);
-}
-
-function updateRect(polyid, d) {
-  var rect = boxlayer.getLayer(polyid);
-  var newbounds = [[d.y1, d.x1], [d.y2, d.x2]]
-  rect.setBounds(newbounds)
-}
+// function updateRect(polyid, d) {
+//   var rect = boxlayer.getLayer(polyid);
+//   var newbounds = [[d.y1, d.x1], [d.y2, d.x2]]
+//   rect.setBounds(newbounds)
+// }
 
 var doneMovingInterval = 200,
   movingTimer;
@@ -278,22 +244,16 @@ var doneMovingInterval = 200,
 
 function getNextAndFill() {
   submitText();
-  var box = getNextBB(selectedBox);
-  setFromData(box);
-  // setFromData(selectedBox);
-
-  clearTimeout(movingTimer);
-  movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid);
 }
 
-function getPrevAndFill() {
-  submitText();
-  var box = getPrevtBB(selectedBox);
-  setFromData(box);
-  // setFromData(selectedBox);
-  clearTimeout(movingTimer);
-  movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid);
-}
+// function getPrevAndFill() {
+//   submitText();
+//   var box = getPrevtBB(selectedBox);
+//   setFromData(box);
+//   // setFromData(selectedBox);
+//   clearTimeout(movingTimer);
+//   movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid);
+// }
 
 function onBoxInputChange(e) {
 
@@ -330,22 +290,33 @@ $('#y2').on('input', function (e) {
 
 $('#updateTxt').on('submit', getNextAndFill);
 function submitText(e) {
+  if (Object.keys(unvisitedWords).length == 0) {
+    return
+  }
   if (e) {
     e.preventDefault();
   }
-
-  var polyid = parseInt($('#formtxt').attr('boxid'));
-  //       console.log("polyig;", polyid, "val", $('#formtxt').val())
-  var newdata = {
-    text: $('#formtxt').val(),
-    x1: parseInt($('#x1').val()),
-    y1: parseInt($('#y1').val()),
-    x2: parseInt($('#x2').val()),
-    y2: parseInt($('#y2').val())
+  sourceWord = $('#sourceInputField').val();
+  targetWord = $('#targetInputField').val();
+  // if source or target not empty add mapping to dictionaryMap
+  if (targetWord != "" && sourceWord != "") {
+    dictionaryMap[sourceWord] = targetWord;
+    delete unvisitedWords[sourceWord];
+    if (Object.keys(unvisitedWords).length == 0) {
+      displayMessage({ type: 'success', message: 'All words are done' })
+      $('#targetInputField').prop('disabled', true);
+      // remove on submit form event
+      $('#updateTxt').on('submit', null);
+      return;
+    }
   }
-  updateBoxdata(polyid, newdata)
-  updateRect(polyid, newdata)
-  // fillAndFocusRect(selectedBox)
+  // clear input fields
+  $('#sourceInputField').val("");
+  $('#targetInputField').val("");
+  // display message if all words are done
+
+  pick = pickRandomWord();
+  fillAndFocusRect(pick)
 }
 
 function updateBoxdata(id, d) {
@@ -397,15 +368,15 @@ function getListData(d) {
 }
 
 
-$(document).bind('keydown', 'ctrl+shift+down', getNextAndFill);
+// $(document).bind('keydown', 'ctrl+shift+down', getNextAndFill);
 
-$(document).bind('keydown', 'ctrl+shift+up', getPrevAndFill);
+// $(document).bind('keydown', 'ctrl+shift+up', getPrevAndFill);
 
-$('#formtxt').bind('keydown', 'ctrl+shift+down', getNextAndFill);
-$('#formtxt').bind('keydown', 'ctrl+shift+up', getPrevAndFill);
-$('#formtxt').bind('keydown', 'shift+return', getPrevAndFill);
+// $('#formtxt').bind('keydown', 'ctrl+shift+down', getNextAndFill);
+// $('#formtxt').bind('keydown', 'ctrl+shift+up', getPrevAndFill);
+// $('#formtxt').bind('keydown', 'shift+return', getPrevAndFill);
 // TODO: check binding for enter key
-$('#formtxt').bind('keydown', 'shift+enter', getPrevAndFill);
+// $('#formtxt').bind('keydown', 'shift+enter', getPrevAndFill);
 // $('#formtxt').bind('keydown', 'return', submitText);
 
 $('#formtxt').on('focus', function () { $(this).select(); });
@@ -446,7 +417,7 @@ async function generateInitialBoxes(image) {
   const worker = await Tesseract.createWorker({
     // langPath as relative path to the worker script
 
-    langPath: 'assets',
+    langPath: '/assets',
     gzip: false,
     logger: m => processWorkerLogMessage(m)
   });
@@ -576,11 +547,72 @@ async function loadBoxFile(e) {
   }
 }
 
+// pick random word from extractWordsFromBoxdataLines()
+function pickRandomWord() {
+  var keys = Object.keys(unvisitedWords);
+  var pick = Math.floor(keys.length * Math.random())
+  return { word: keys[pick], lines: unvisitedWords[keys[pick]] }
+}
+
+
+function extractWordsFromBoxdataLines() {
+  var words = {};
+  var hyphenatedWord = null;
+  for (var i = 0; i < boxdata.length; i++) {
+    var line = boxdata[i];
+    // remove punctuation except hyphens
+    line.text = line.text.replace(/[.,\/#!$%\^&\*;:{}=_~()]/g, '').trim();
+    // // remove spaces at beginning and end of line
+    // line.text = line.text.trim();
+    // split line into words by any number of spaces
+    var lineWords = line.text.split(/\s+/);
+    for (var j = 0; j < lineWords.length - 1; j++) {
+      if (hyphenatedWord != null) {
+        lineWords[j] = hyphenatedWord + lineWords[j];
+        hyphenatedWord = null;
+      }
+      var word = lineWords[j];
+      if (!words[word]) {
+        words[word] = [];
+      }
+      words[word].push(line);
+    }
+    var lastWord = lineWords[lineWords.length - 1];
+    if (lastWord.endsWith('-') && lastWord.length > 1) {
+      hyphenatedWord = lastWord.substring(0, lastWord.length - 1);
+    } else {
+      if (!words[lastWord]) {
+        words[lastWord] = [];
+      }
+      words[lastWord].push(line);
+    }
+  }
+  // ignoring last hypenated word as it is not complete
+  // return words and mapping
+  return words;
+}
+
+// create a mapping of words to their line bounding boxes
+function createWordToLineMapping() {
+  var wordToLineMapping = {};
+  for (var i = 0; i < boxdata.length; i++) {
+    var line = boxdata[i];
+    var lineWords = line.text.split(' ');
+    for (var j = 0; j < lineWords.length; j++) {
+      var word = lineWords[j];
+      wordToLineMapping[word] = line;
+    }
+  }
+  return wordToLineMapping;
+}
+
+
+
 async function setButtonsEnabledState(state) {
   if (state) {
     $('#boxFile').prop('disabled', false);
-    $('#downloadBoxFileButton').removeClass('disabled');
-    $('#downloadGroundTruthButton').removeClass('disabled');
+    $('#downloadWordListButton').removeClass('disabled');
+    $('#downloadDictionaryMappingButton').removeClass('disabled');
     $('#x1').prop('disabled', false);
     $('#y1').prop('disabled', false);
     $('#x2').prop('disabled', false);
@@ -594,8 +626,8 @@ async function setButtonsEnabledState(state) {
 
   } else {
     $('#boxFile').prop('disabled', true);
-    $('#downloadBoxFileButton').addClass('disabled');
-    $('#downloadGroundTruthButton').addClass('disabled');
+    $('#downloadWordListButton').addClass('disabled');
+    $('#downloadDictionaryMappingButton').addClass('disabled');
     $('#x1').prop('disabled', true);
     $('#y1').prop('disabled', true);
     $('#x2').prop('disabled', true);
@@ -620,45 +652,16 @@ function updateProgressBar(options = {}) {
     $('#editingProgress').removeClass('active');
     $('#editingProgress').removeClass('indicating');
     // get all lines with text
-    var linesWithText = boxdata.filter(function (el) {
-      return el.text != '';
-    });
     $('#editingProgress')
       .progress({
-        value: linesWithText.length,
-        total: boxdata.length,
+        value: Object.keys(dictionaryMap).length,
+        total: Object.keys(unvisitedWords).length + Object.keys(dictionaryMap).length,
         text: {
-          active: 'Tagging: {value} of {total} lines tagged'
+          active: 'Mapping: {value} of {total} words mapped'
         }
-      })
-      ;
-    return;
-  } else {
-    // add indicating class to #editingProgress
-    $('#editingProgress').addClass('indicating');
-    if (options.type == 'ocr') {
-      $('#editingProgress')
-        .progress({
-          value: options.progress,
-          total: 1,
-          text: {
-            active: 'Analyzing Image: {percent}%'
-          }
-        })
-        ;
-      return;
-    } else if (options.type == 'initializingWorker') {
-      $('#editingProgress')
-        .progress({
-          value: 0,
-          total: 1,
-          text: {
-            active: options.status + '…'
-          }
-        })
-        ;
-    }
+      });
   }
+  return;
 }
 
 async function loadImageFile(e) {
@@ -682,7 +685,7 @@ async function loadImageFile(e) {
       map.eachLayer(function (layer) {
         map.removeLayer(layer);
       });
-      result = await generateInitialBoxes(img)
+      // result = await generateInitialBoxes(img)
       boxdataIsDirty = false;
       setButtonsEnabledState(true);
       updateProgressBar({ type: 'tagging' });
@@ -721,7 +724,7 @@ async function loadImageFile(e) {
     };
     img.src = _URL.createObjectURL(file);
 
-    updateDownloadButtonsLabels({boxDownloadButton: imageFileName+'.box', groundTruthDownloadButton: imageFileName+'.gt.txt'});
+    updateDownloadButtonsLabels({ downloadWordListButton: imageFileName + '.wordlist', downloadDictionaryMappingButton: imageFileName + '.json' });
     // TODO: fix issue with text input not being focused after loading image
 
     // focus text input
@@ -730,17 +733,17 @@ async function loadImageFile(e) {
 }
 
 function updateDownloadButtonsLabels(options = {}) {
-  if (options.boxDownloadButton) {
-    $('#downloadBoxFileButton').html('<i class = "download icon"></i>' + options.boxDownloadButton)
-    $('#downloadBoxFileButton').css('white-space', 'nowrap');
+  if (options.downloadWordListButton) {
+    $('#downloadWordListButton').html('<i class = "download icon"></i>' + options.downloadWordListButton)
+    $('#downloadWordListButton').css('white-space', 'nowrap');
   } else {
-    $('#downloadBoxFileButton').html('<i class = "download icon"></i>Download')
+    $('#downloadWordListButton').html('<i class = "download icon"></i>Download')
   }
-  if (options.groundTruthDownloadButton) {
-    $('#downloadGroundTruthButton').html('<i class = "download icon"></i>' + options.groundTruthDownloadButton)
-    $('#downloadGroundTruthButton').css('white-space', 'nowrap');
+  if (options.downloadDictionaryMappingButton) {
+    $('#downloadDictionaryMappingButton').html('<i class = "download icon"></i>' + options.downloadDictionaryMappingButton)
+    $('#downloadDictionaryMappingButton').css('white-space', 'nowrap');
   } else {
-    $('#downloadGroundTruthButton').html('<i class = "download icon"></i>Download')
+    $('#downloadDictionaryMappingButton').html('<i class = "download icon"></i>Download')
   }
 }
 
@@ -852,23 +855,6 @@ var zoomControl = new L.Control.Zoom({
   position: 'topright'
 });
 
-var drawControl = new L.Control.Draw({
-  draw: {
-    polygon: false,
-    marker: false,
-    circle: false,
-    polyline: false,
-    rectangle: true,
-    circlemarker: false,
-  },
-  position: 'topright',
-  edit: {
-    featureGroup: boxlayer,
-    edit: false,
-    remove: true,
-  }
-});
-
 function formatForPopup(objects) {
   var formatted = '<div class="ui compact grid">';
   formatted += '<div class="two column stretched row">' + '<div class="twelve wide left floated column">' + '<b>Name</b>' + '</div>' + '<div class="four wide right floated column">' + '<b>Char</b>' + '</div>' + '</div>';
@@ -915,6 +901,8 @@ function getUnicodeData(code) {
 
 $(document).ready(async function () {
   $('#imageFile').prop('disabled', false);
+  // TODO: enable this after fixing bug when image is loaded after box file
+  // $('#boxFile').prop('disabled', false);
   displayMessage({ message: 'Hover over the question mark in the top right corner for help and keyboard shortcuts.' });
 
   $('.big.question.circle.icon')
@@ -947,16 +935,15 @@ $(document).ready(async function () {
   });
 
   map.addControl(zoomControl);
-  map.addControl(drawControl);
 
   // load boxfile
   $('#boxFile').change(loadBoxFile);
   //   load Image
   $("#imageFile").change(loadImageFile);
 
-  $('#downloadBoxFileButton').on('click', async function (e) {
-    if (boxdata.length == 0) {
-      displayMessage({ type: 'warning', message: 'No box files to download.' });
+  $('#downloadWordListButton').on('click', async function (e) {
+    if (Object.keys(dictionaryMap).length == 0 && Object.keys(unvisitedWords).length == 0) {
+      displayMessage({ type: 'warning', message: 'No word list to download.' });
       return;
     }
     if (lineIsDirty) {
@@ -964,24 +951,18 @@ $(document).ready(async function () {
       return;
     }
     sortAllBoxes()
-    var fileExtension = '.box'
+    var fileExtension = '.wordlist'
     var content = '';
-    if (boxFileType == BoxFileType.CHAR_OR_LINE) {
-      $.each(boxdata, function () {
-        content = content + this.text + ' ' + this.x1 + ' ' + this.y1 + ' ' + this.x2 + ' ' + this.y2 + ' 0\n'
-      })
-    }
-    if (boxFileType == BoxFileType.WORDSTR) {
-      $.each(boxdata, function () {
-        content = content + 'WordStr ' + this.x1 + ' ' + this.y1 + ' ' + this.x2 + ' ' + this.y2 + ' 0 #' + this.text + '\n';
-        content = content + '\t ' + (this.x2 + 1) + ' ' + this.y1 + ' ' + (this.x2 + 5) + ' ' + this.y2 + ' 0\n';
-      })
-    }
+    // get all keys from dictionaryMap and unvisitedWords and sort them
+    var keys = Object.keys(dictionaryMap).concat(Object.keys(unvisitedWords));
+    keys.sort();
+    // join keys with newlines
+    content = keys.join('\n');
     downloadFile(content, fileExtension);
   });
-  $('#downloadGroundTruthButton').on('click', async function (e) {
-    if (boxdata.length == 0) {
-      displayMessage({ type: 'warning', message: 'No ground-truth to download.' });
+  $('#downloadDictionaryMappingButton').on('click', async function (e) {
+    if (Object.keys(dictionaryMap).length == 0) {
+      displayMessage({ type: 'warning', message: 'No mapping to download.' });
       return;
     }
     if (lineIsDirty) {
@@ -989,19 +970,19 @@ $(document).ready(async function () {
       return;
     }
     sortAllBoxes()
-    var fileExtension = '.gt.txt'
+    var fileExtension = '.wordmap'
     var content = '';
-    if (boxFileType == BoxFileType.CHAR_OR_LINE) {
-      $.each(boxdata, function () {
-        content = content + this.text + '\n'
-      })
-    }
-    if (boxFileType == BoxFileType.WORDSTR) {
-      $.each(boxdata, function () {
-        content = content + this.text + '\n';
-      })
-    }
-    downloadFile(content, fileExtension);
+    // add word mappings to content
+    content = Object.entries(dictionaryMap).map(([key, value]) => key + '\t' + value).join('\n');
+    // downloadFile(content, fileExtension);
+    // save mapping as json for easy loading
+    var json = JSON.stringify(dictionaryMap);
+    downloadFile(json, '.json', data = 'application/json');
+    // var blob = new Blob([json], { type: 'application/json' });
+    // var url = URL.createObjectURL(blob);
+    // var a = document.createElement('a');
+    // a.download = 'json';
+
   });
 
   // delete rect
@@ -1056,12 +1037,12 @@ $(document).ready(async function () {
   });
 
 
-  $('#nextBB').on('click', getNextAndFill);
+  // $('#nextBB').on('click', getNextAndFill);
   // $('#updateText').on('click', submitText);
-  $('#previousBB').on('click', getPrevAndFill);
+  // $('#previousBB').on('click', getPrevAndFill);
 
   await $.ajax({
-    url: 'assets/unicodeData.csv',
+    url: '/assets/unicodeData.csv',
     dataType: 'text',
     success: function (data) {
       parsedData = $.csv.toObjects(data, {
@@ -1072,15 +1053,16 @@ $(document).ready(async function () {
     }
   });
 
-  // when text inside #formtxt is selected
-  $('#formtxt').bind('mouseup', showCharInfoPopup);
-  $('#formtxt').bind('keyup', showCharInfoPopup);
+
+  $('#sourceInputField').bind('mouseup', showCharInfoPopup);
+  $('#sourceInputField').bind('keyup', showCharInfoPopup);
+  // when selection of readonly text is lost, hide popup
 });
 
 
-function downloadFile(content, fileExtension) {
+function downloadFile(content, fileExtension, data = 'application/text') {
   var element = document.createElement('a');
-  element.href = 'data:application/text;charset=utf-8,' + encodeURIComponent(content);
+  element.href = 'data:' + data + ';charset=utf-8,' + encodeURIComponent(content);
   element.download = imageFileName + fileExtension;
   element.target = '_blank';
   element.style.display = 'none';

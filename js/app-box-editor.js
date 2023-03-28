@@ -556,7 +556,7 @@ async function loadBoxFile(e) {
       // clear file input
       $('#boxFile').val(boxFileName);
       return;
-    } else if (imageFileName != file.name.split('.')[0] && imageFileName != undefined) {
+    } else if (imageFileName != file.name.split('.').slice(0, -1).join('.') && imageFileName != undefined) {
       result = await askUser({ message: 'Chosen file has name <code>' + file.name + '</code> instead of expected <code>' + imageFileName + '.box</code>.<br> Are you sure you want to continue?', title: 'Different File Name', type: 'warning' });
       if (!result) {
         // TODO: resolve this error:

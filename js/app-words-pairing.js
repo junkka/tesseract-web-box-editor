@@ -10,6 +10,8 @@ var lineIsDirty = false;
 var unicodeData;
 var dictionaryMap = {};
 var unvisitedWords = {};
+var picks = [];
+var pickIndex = 0;
 
 boxActive = {
   color: 'red',
@@ -64,6 +66,12 @@ function setFromData(d) {
   selectedBox = d;
   //     console.log(d)
   $('#sourceInputField').val(d).attr('boxid', d.polyid);
+  // if is in dictionary, set target
+  if (d in dictionaryMap) {
+    $('#targetInputField').val(dictionaryMap[d]);
+  } else {
+    $('#targetInputField').val("");
+  }
   $('#targetInputField').focus();
   // updateBackground();
   lineIsDirty = false;
@@ -245,15 +253,20 @@ var doneMovingInterval = 200,
 function getNextAndFill() {
   submitText();
 }
-
-// function getPrevAndFill() {
-//   submitText();
-//   var box = getPrevtBB(selectedBox);
-//   setFromData(box);
-//   // setFromData(selectedBox);
-//   clearTimeout(movingTimer);
-//   movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid);
-// }
+function getPrevAndFill() {
+  if (pickIndex > 0) {
+    pickIndex--;
+  } else {
+    return;
+  }
+  // get last pick from history
+  // picks.pop();
+  var lastpick = picks[pickIndex];
+  // console.log("lastpick", lastpick)
+  if (lastpick) {
+    fillAndFocusRect(lastpick);
+  }
+}
 
 function onBoxInputChange(e) {
 
@@ -309,14 +322,25 @@ function submitText(e) {
       $('#updateTxt').on('submit', null);
       return;
     }
+  } else {
+    // remove mapping from dictionaryMap if exists
+    if (dictionaryMap[sourceWord]) {
+      delete dictionaryMap[sourceWord];
+    }
   }
   // clear input fields
   $('#sourceInputField').val("");
   $('#targetInputField').val("");
   // display message if all words are done
-
-  pick = pickRandomWord();
-  fillAndFocusRect(pick)
+  // if pickIndex not at end of picks
+  if (pickIndex < picks.length - 1) {
+    pickIndex++;
+    var pick = picks[pickIndex];
+  } else {
+    // pick next word
+    pick = pickRandomWord();
+  }
+  fillAndFocusRect(pick);
 }
 
 function updateBoxdata(id, d) {
@@ -550,8 +574,11 @@ async function loadBoxFile(e) {
 // pick random word from extractWordsFromBoxdataLines()
 function pickRandomWord() {
   var keys = Object.keys(unvisitedWords);
-  var pick = Math.floor(keys.length * Math.random())
-  return { word: keys[pick], lines: unvisitedWords[keys[pick]] }
+  var index = Math.floor(keys.length * Math.random())
+  var pick = { word: keys[index], lines: unvisitedWords[keys[index]] }
+  picks.push(pick);
+  pickIndex = picks.length - 1;
+  return pick
 }
 
 
@@ -1037,9 +1064,9 @@ $(document).ready(async function () {
   });
 
 
-  // $('#nextBB').on('click', getNextAndFill);
+  $('#nextBB').on('click', getNextAndFill);
   // $('#updateText').on('click', submitText);
-  // $('#previousBB').on('click', getPrevAndFill);
+  $('#previousBB').on('click', getPrevAndFill);
 
   await $.ajax({
     url: '../../assets/unicodeData.csv',

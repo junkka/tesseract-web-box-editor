@@ -675,7 +675,8 @@ async function loadImageFile(e) {
 
 
   if ((file = this.files[0])) {
-    imageFileName = file.name.split('.')[0]
+    // get file name without extension, file might have dots in it
+    imageFileName = file.name.split('.').slice(0, -1).join('.');
     imageFileNameForButton = file;
     img = new Image();
     img.onload = async function () {

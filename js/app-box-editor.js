@@ -1105,13 +1105,12 @@ function showCharInfoPopup(e) {
     selection = document.selection.createRange();
   }
   // firefox fix
-  // if (selection.toString().length == 0) {
-  //   var input = document.getElementById('formtxt');
-  //   var startPos = input.selectionStart;
-  //   var endPos = input.selectionEnd;
-  //   selection = input.value.substring(startPos, endPos);
-  // }
-  $("#formtxt").get(0).value.substring($("#formtxt").get(0).selectionStart, $("#formtxt").get(0).selectionEnd);
+  if (selection.toString().length == 0) {
+    var input = document.getElementById('formtxt');
+    var startPos = input.selectionStart;
+    var endPos = input.selectionEnd;
+    selection = input.value.substring(startPos, endPos);
+  }
   results = getUnicodeInfo(selection.toString());
   if (results.length == 0 || results.length > 5) {
     // if (selection.toString().length == 0 || selection.toString().length > 5) {

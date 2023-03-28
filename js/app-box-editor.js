@@ -722,7 +722,7 @@ async function loadImageFile(e) {
     };
     img.src = _URL.createObjectURL(file);
 
-    updateDownloadButtonsLabels({boxDownloadButton: imageFileName+'.box', groundTruthDownloadButton: imageFileName+'.gt.txt'});
+    updateDownloadButtonsLabels({ boxDownloadButton: imageFileName + '.box', groundTruthDownloadButton: imageFileName + '.gt.txt' });
     // TODO: fix issue with text input not being focused after loading image
 
     // focus text input
@@ -770,15 +770,24 @@ function colorize(text) {
   text = text.normalize('NFD');
   var current_script = null;
   var current_span = '';
+  var span_class = '';
   for (var i = 0; i < text.length; i++) {
+    var isCapital = false;
     var char = text.charAt(i);
+    if (char != char.toLowerCase()) {
+      isCapital = true;
+    }
     if (cyrillic_pattern.test(char)) {
-      if (current_script == 'cyrillic') {
+      if (isCapital)
+        span_class = 'cyrillic capital';
+      else
+        span_class = 'cyrillic';
+      if (current_script == span_class) {
         current_span += char;
       } else {
         colored_text += '</span>' + current_span;
-        current_span = '<span class="cyrillic">' + char;
-        current_script = 'cyrillic';
+        current_span = '<span class="' + span_class + '">' + char;
+        current_script = span_class;
       }
     } else if (char == ' ') {
       if (current_script == 'space') {
@@ -789,18 +798,23 @@ function colorize(text) {
         current_script = 'space';
       }
     } else if (latin_pattern.test(char)) {
-      if (current_script == 'latin') {
+      if (isCapital)
+        span_class = 'latin capital';
+      else
+        span_class = 'latin';
+      if (current_script == span_class) {
         current_span += char;
       } else {
         colored_text += '</span>' + current_span;
-        current_span = '<span class="latin">' + char;
-        current_script = 'latin';
+        current_span = '<span class="' + span_class + '">' + char;
+        current_script = span_class;
       }
     } else {
       colored_text += '</span>' + current_span + char;
       current_span = '';
       current_script = null;
     }
+    isCapital = false;
   }
   colored_text += '</span>' + current_span;
   return colored_text;

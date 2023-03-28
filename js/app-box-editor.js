@@ -568,8 +568,8 @@ async function loadBoxFile(e) {
     }
     // Read the file
     reader.readAsText(file);
-
-    boxFileName = file.name.split('.')[0]
+    // Set boxFileName taking into account it might have multiple dots
+    file.name.split('.').slice(0, -1).join('.');
     boxFileNameForButton = file;
     // When it's loaded, process it
     $(reader).on('load', processFile);
@@ -675,7 +675,8 @@ async function loadImageFile(e) {
 
 
   if ((file = this.files[0])) {
-    imageFileName = file.name.split('.')[0]
+    // get file name without extension, file might have dots in it
+    imageFileName = file.name.split('.').slice(0, -1).join('.');
     imageFileNameForButton = file;
     img = new Image();
     img.onload = async function () {

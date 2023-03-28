@@ -335,7 +335,6 @@ function submitText(e) {
   }
 
   var polyid = parseInt($('#formtxt').attr('boxid'));
-  //       console.log("polyig;", polyid, "val", $('#formtxt').val())
   var newdata = {
     text: $('#formtxt').val(),
     x1: parseInt($('#x1').val()),
@@ -345,7 +344,6 @@ function submitText(e) {
   }
   updateBoxdata(polyid, newdata)
   updateRect(polyid, newdata)
-  // fillAndFocusRect(selectedBox)
 }
 
 function updateBoxdata(id, d) {
@@ -939,8 +937,11 @@ $(document).ready(async function () {
   $(window).keydown(function (event) {
     if (event.keyCode == 13) {
       event.preventDefault();
-      // submitText(event)
-      getNextAndFill();
+      if (event.shiftKey) {
+        getPrevAndFill();
+      } else {
+        getNextAndFill();
+      }
       return false;
     }
   });

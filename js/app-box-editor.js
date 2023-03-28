@@ -235,7 +235,15 @@ function editRect(e) {
     y2: Math.round(layer._latlngs[0][2].lat)
   }
 
+  // TODO: always sync box on map with form data
+
   updateBoxdata(layer._leaflet_id, newd);
+  console.log(e.target.getBounds());
+  // update form data with new values
+  $('#x1').val(newd.x1);
+  $('#y1').val(newd.y1);
+  $('#x2').val(newd.x2);
+  $('#y2').val(newd.y2);
 
   fillAndFocusRect(box);
 }
@@ -333,7 +341,6 @@ function submitText(e) {
   if (e) {
     e.preventDefault();
   }
-
   var polyid = parseInt($('#formtxt').attr('boxid'));
   var newdata = {
     text: $('#formtxt').val(),

@@ -446,7 +446,7 @@ async function generateInitialBoxes(image) {
   const worker = await Tesseract.createWorker({
     // langPath as relative path to the worker script
 
-    langPath: '/box-editor-for-tesseract/assets',
+    langPath: '../../assets',
     gzip: false,
     logger: m => processWorkerLogMessage(m)
   });
@@ -1061,7 +1061,7 @@ $(document).ready(async function () {
   $('#previousBB').on('click', getPrevAndFill);
 
   await $.ajax({
-    url: '/box-editor-for-tesseract/assets/unicodeData.csv',
+    url: '../../assets/unicodeData.csv',
     dataType: 'text',
     success: function (data) {
       parsedData = $.csv.toObjects(data, {

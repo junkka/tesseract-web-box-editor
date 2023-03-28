@@ -417,7 +417,7 @@ async function generateInitialBoxes(image) {
   const worker = await Tesseract.createWorker({
     // langPath as relative path to the worker script
 
-    langPath: '/box-editor-for-tesseract/assets',
+    langPath: '../../assets',
     gzip: false,
     logger: m => processWorkerLogMessage(m)
   });
@@ -903,7 +903,7 @@ $(document).ready(async function () {
   $('#imageFile').prop('disabled', false);
   // TODO: enable this after fixing bug when image is loaded after box file
   // $('#boxFile').prop('disabled', false);
-  displayMessage({ message: 'Hover over the question mark in the top right corner for help and keyboard shortcuts.' });
+  // displayMessage({ message: 'Hover over the question mark in the top right corner for help and keyboard shortcuts.' });
 
   $('.big.question.circle.icon')
     .popup({
@@ -1042,7 +1042,7 @@ $(document).ready(async function () {
   // $('#previousBB').on('click', getPrevAndFill);
 
   await $.ajax({
-    url: '/box-editor-for-tesseract/assets/unicodeData.csv',
+    url: '../../assets/unicodeData.csv',
     dataType: 'text',
     success: function (data) {
       parsedData = $.csv.toObjects(data, {

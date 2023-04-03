@@ -766,7 +766,7 @@ var cyrillic_pattern = /[\u0400-\u04FF\u0500-\u052F\u2DE0-\u2DFF\uA640-\uA69F\u1
 var latin_pattern = /[\u0000-\u007F\u0080-\u00FF]/;
 
 // Function to colorize text
-function colorize(text) {
+async function colorize(text) {
   var colored_text = '';
   if (text == '') {
     return '&nbsp;'
@@ -832,15 +832,17 @@ window.onbeforeunload = function () {
   }
 }
 
-function setLineIsDirty() {
+async function setLineIsDirty() {
   lineIsDirty = true;
 }
 
 // Function to update the background with the colorized text
-function updateBackground() {
+async function updateBackground(e) {
+  setLineIsDirty();
   var input = document.getElementById("formtxt");
+  console.log(input.value);
   var text = input.value;
-  var colored_text = colorize(text);
+  var colored_text = await colorize(text);
   var background = document.getElementById("myInputBackground");
   background.innerHTML = colored_text;
 }

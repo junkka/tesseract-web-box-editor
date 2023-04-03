@@ -932,7 +932,7 @@ $(document).ready(async function () {
   // $('#boxFile').prop('disabled', false);
   // displayMessage({ message: 'Hover over the question mark in the top right corner for help and keyboard shortcuts.' });
 
-  $('.big.question.circle.icon')
+  $('.menu .question.circle.icon')
     .popup({
       inline: true
     });

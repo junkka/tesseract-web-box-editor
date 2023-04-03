@@ -61,29 +61,19 @@
               <div class="header">Welcome!</div>
               <div class="content">
                 <p>
-                  Upload an image to tag it with the ground truth. Bounding boxes are automatically generated and can be
-                  edited. You
-                  can also upload an existing <code>.box</code> file to edit it, but the generated bounding boxes will
-                  be
-                  overwritten.
+                  Upload an image and a <code>.box</code> file. Unique words will automatically be extracted and added to a sorted words list. Pair up each word with its translation to create a mapping file.
                 </p>
                 <p>
-                  The progress bar shows the progress of the tagging. When done, download the <code>.box</code> file and
+                  Transliteration progress is shown below the image. When done, download the <code>.wordlist</code> file and
                   the
-                  <code>.gt.txt</code> file to use in Tesseract.
-                </p>
-                <p>
-                  Box handles appear after clicking on it. You can drag them to move the box or resize it. Create boxes
-                  using the
-                  square tool and delete them using the trash can tool.
+                  <code>.json</code> file to extract transliteration rules.
                 </p>
                 <div class="ui sub header">Tips</div>
                 <p>
                   Select characters in the input field to see their Unicode name.
                 </p>
                 <p>
-                  While tagging use <code>return</code> to commit current line and move forward.
-                  <!-- While tagging use <code>return</code> and <code>shift+return</code> to move forward and backward. -->
+                  While transliterating use <code>return</code> and <code>shift+return</code> to move forward and backward.
                 </p>
               </div>
             </div>

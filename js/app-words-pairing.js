@@ -8,10 +8,54 @@ var boxFileNameForButton;
 var boxdataIsDirty = false;
 var lineIsDirty = false;
 var unicodeData;
-var dictionaryMap = {};
+// var dictionaryMap = { 'words': [] };
+// var dictionaryMap = new Words([]);
 var unvisitedWords = {};
 var picks = [];
 var pickIndex = 0;
+
+class Word {
+  constructor({ RTS, TRANSLITERATION, TRANSLATION }) {
+    this.RTS = RTS;
+    this.TRANSLITERATION = TRANSLITERATION;
+    this.TRANSLATION = TRANSLATION;
+  }
+}
+
+class Words {
+
+  constructor(words) {
+    this.words = words.map(word => new Word(word.RTS, word.TRANSLITERATION, word.TRANSLATION));
+  }
+
+  addWord(word) {
+    // update if exists and given translation
+    if (this.hasWord(word.RTS)) {
+      if (word.TRANSLITERATION) {
+        this.getWord(word.RTS).TRANSLITERATION = word.TRANSLITERATION;
+      }
+      if (word.TRANSLATION) {
+        this.getWord(word.RTS).TRANSLATION = word.TRANSLATION;
+      }
+      return;
+    }
+
+    this.words.push(word);
+  }
+
+  hasWord(str) {
+    return this.words.some(word => Object.values(word).includes(str));
+  }
+
+  getWord(str) {
+    return this.words.find(word => Object.values(word).includes(str));
+  }
+
+  deleteWord(str) {
+    this._words = this.words.filter(word => !Object.values(word).includes(str));
+  }
+}
+var dictionaryMap = new Words([]);
 
 boxActive = {
   color: 'red',
@@ -67,8 +111,9 @@ function setFromData(d) {
   //     console.log(d)
   $('#sourceInputField').val(d).attr('boxid', d.polyid);
   // if is in dictionary, set target
-  if (d in dictionaryMap) {
-    $('#targetInputField').val(dictionaryMap[d]);
+  if (dictionaryMap.hasWord(d)) {
+    // if (d in dictionaryMap.words) {
+    $('#targetInputField').val(dictionaryMap.getWord(d).TRANSLITERATION);
   } else {
     $('#targetInputField').val("");
   }
@@ -313,7 +358,9 @@ function submitText(e) {
   targetWord = $('#targetInputField').val();
   // if source or target not empty add mapping to dictionaryMap
   if (targetWord != "" && sourceWord != "") {
-    dictionaryMap[sourceWord] = targetWord;
+    word = new Word({ RTS: sourceWord, TRANSLITERATION: targetWord });
+    dictionaryMap.addWord(word);
+    // dictionaryMap[sourceWord] = targetWord;
     delete unvisitedWords[sourceWord];
     if (Object.keys(unvisitedWords).length == 0) {
       displayMessage({ type: 'success', message: 'All words are done' })
@@ -324,10 +371,11 @@ function submitText(e) {
     }
   } else {
     // remove mapping from dictionaryMap if exists
-    if (dictionaryMap[sourceWord]) {
-      delete dictionaryMap[sourceWord];
+    if (dictionaryMap.containsString(sourceWord)) {
+      dictionaryMap.removeWord(sourceWord);
     }
   }
+
   // clear input fields
   $('#sourceInputField').val("");
   $('#targetInputField').val("");
@@ -681,8 +729,8 @@ function updateProgressBar(options = {}) {
     // get all lines with text
     $('#editingProgress')
       .progress({
-        value: Object.keys(dictionaryMap).length,
-        total: Object.keys(unvisitedWords).length + Object.keys(dictionaryMap).length,
+        value: dictionaryMap.words.length,
+        total: Object.keys(unvisitedWords).length + dictionaryMap.words.length,
         text: {
           active: 'Mapping: {value} of {total} words mapped'
         }
@@ -972,7 +1020,7 @@ $(document).ready(async function () {
   $("#imageFile").change(loadImageFile);
 
   $('#downloadWordListButton').on('click', async function (e) {
-    if (Object.keys(dictionaryMap).length == 0 && Object.keys(unvisitedWords).length == 0) {
+    if (dictionaryMap.words.length == 0 && Object.keys(unvisitedWords).length == 0) {
       displayMessage({ type: 'warning', message: 'No word list to download.' });
       return;
     }
@@ -983,15 +1031,18 @@ $(document).ready(async function () {
     sortAllBoxes()
     var fileExtension = '.wordlist'
     var content = '';
-    // get all keys from dictionaryMap and unvisitedWords and sort them
-    var keys = Object.keys(dictionaryMap).concat(Object.keys(unvisitedWords));
-    keys.sort();
-    // join keys with newlines
-    content = keys.join('\n');
+    // get all RTS words from dictionaryMap
+    var words = dictionaryMap.words.map(function (word) {
+      return word.RTS;
+    }).concat(Object.keys(unvisitedWords))
+    // sort words
+    words.sort();
+    // join words with newlines
+    content = words.join('\n');
     downloadFile(content, fileExtension);
   });
   $('#downloadDictionaryMappingButton').on('click', async function (e) {
-    if (Object.keys(dictionaryMap).length == 0) {
+    if (dictionaryMap.words.length == 0) {
       displayMessage({ type: 'warning', message: 'No mapping to download.' });
       return;
     }
@@ -1000,10 +1051,10 @@ $(document).ready(async function () {
       return;
     }
     sortAllBoxes()
-    var fileExtension = '.wordmap'
-    var content = '';
+    // var fileExtension = '.wordmap'
+    // var content = '';
     // add word mappings to content
-    content = Object.entries(dictionaryMap).map(([key, value]) => key + '\t' + value).join('\n');
+    // content = Object.entries(dictionaryMap).map(([key, value]) => key + '\t' + value).join('\n');
     // downloadFile(content, fileExtension);
     // save mapping as json for easy loading
     var json = JSON.stringify(dictionaryMap);

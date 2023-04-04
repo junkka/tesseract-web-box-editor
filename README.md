@@ -3,7 +3,7 @@ Web-based Box Editor for Tesseract OCR
 
 Use app » [Box Editor for Tesseract OCR](https://www.penteliuc.com/box-editor-for-tesseract/)
 
-![screenshot](img/app-screenshot-2-min.png)
+![screenshot](img/app-screenshot-3-min.png)
 
 Web app for editing Tesseract OCR LSTM box files in WordStr format, using [Tesseract OCR js](https://tesseract.projectnaptha.com), [leaflet mapping library](http://leafletjs.com), and [leaflet.draw](https://github.com/Leaflet/Leaflet.draw).
 
@@ -25,7 +25,7 @@ Web app for editing Tesseract OCR LSTM box files in WordStr format, using [Tesse
   - remove boxes using the delete tool;
   - edit boxes by clicking on them and dragging the handles, or adjusting the `Left`, `Bottom`, `Right`, and `Top` input fields.
 3. Type the ground-truth into the text field.
-4. Press `Return` or the `Next` button to commit current text line.
+4. Press `Return` or the `Next` button to commit the current text line.
 5. Download the edited box file using the `Download` button.
 
 Keyboard shortcuts are available to navigate forward `control + shift + down` and backward `control + shift + up`.
@@ -33,18 +33,18 @@ NOTE: Keyboard shortcuts implementation is buggy and needs fixing.
 
 ### Features to add
 - [ ] Keep session data using cookies;
-- [ ] Upload ground-truth to fill boxes;
-- [ ] Download ground-truth from box file;
+- [x] Upload ground-truth to fill boxes;
+- [x] Download ground-truth from the box file;
 - [ ] Add options to text highlighter;
 - [ ] Fully support char-by-char tagging[^1];
 - [ ] Add Dark Mode support;
 
 ### Acknowledgment
-This work was supported by a grant of the Ministry of Research, Innovation and Digitization, CCCDI - UEFISCDI, project number PN-III-P2-2.1-PED-2021-0693, within PNCDI III.
+This work was supported by a grant from the Ministry of Research, Innovation and Digitization, CCCDI - UEFISCDI, project number PN-III-P2-2.1-PED-2021-0693, within PNCDI III.
 
 Project website: [https://transitional-romanian-transliteration.azurewebsites.net](https://transitional-romanian-transliteration.azurewebsites.net)
 
 ----------
 Original Source Code by [Johan Junkka](http://johanjunkka.com/)
 
-[^1]: legacy character-by-character box editing is suppported, although it is not actively maintained.
+[^1]: legacy character-by-character box editing is supported, although it is not actively maintained.

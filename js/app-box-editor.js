@@ -858,10 +858,13 @@ function displayMessage(object) {
       object.title = 'Warning';
     }
   }
+  if (object.time == undefined) {
+    object.time = 'auto';
+  }
   $.toast({
     title: object.title,
     class: object.type,
-    displayTime: 'auto',
+    displayTime: object.time,
     showProgress: 'top',
     position: 'top right',
     classProgress: object.color,
@@ -953,6 +956,14 @@ $(document).ready(async function () {
       }
       return false;
     }
+  });
+
+  // on #formtxt focus apply class to #myInputBackground
+  $('#formtxt').focus(function () {
+    $('#myInputBackground').addClass('focused');
+  });
+  $('#formtxt').blur(function () {
+    $('#myInputBackground').removeClass('focused');
   });
 
 

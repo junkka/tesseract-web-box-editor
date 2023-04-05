@@ -7128,28 +7128,8 @@ div.ui.mini.blue.empty.circular.label {
   }
 
   .ui.form label,
-  .ui.form .segment label,
-  .ui.form .segment .ui.checkbox label,
-  .ui.form .ui.checkbox label,
-  .ui.form .inline.fields>label,
-  .ui.form .inline.fields .field>label,
-  .ui.form .inline.fields .field>p,
-  .ui.form .inline.field>label,
-  .ui.form .inline.field>p {
-    color: rgba(255, 255, 255, 0.9);
-  }
-
-  .ui.form .segment .ui.checkbox label,
-  .ui.form .segment label,
-  .ui.form .inline.field>label,
-  .ui.form .inline.field>p,
-  .ui.form .inline.fields .field>label,
-  .ui.form .inline.fields .field>p,
-  .ui.form .inline.fields>label,
-  .ui.form .ui.checkbox label,
-  .ui.form label,
   .ui.form .fields .field label {
-    color: rgba(255, 255, 255, 0.9)!important;
+    color: rgba(255, 255, 255, 0.9) !important;
   }
 
   .ui.header {
@@ -7165,13 +7145,70 @@ div.ui.mini.blue.empty.circular.label {
     color: rgba(255, 255, 255, .7);
   }
 
-  .ui.secondary.menu .active.item {
+  .ui.secondary.menu .active.item,
+  .ui.form .field input,
+  #updateTxt #myInputContainer #myInputBackground {
     background: rgba(255, 255, 255, .15);
     color: #fff;
+  }
+
+  #updateTxt #myInputContainer #myInputBackground.focused {
+    color: rgba(0, 0, 0, .95);
+    border-color: #85b7d9;
+    border-radius: .28571429rem;
+    background: #fff;
+    box-shadow: 0 0 0 0 rgba(34, 36, 38, .35) inset;
   }
 
   .ui.menu .active.item {
     background: #3d3e3f;
     color: #fff !important;
   }
+
+  /* buttons */
+  .ui.button {
+    background: #3d3e3f;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .ui.button:hover {
+    background: #4d4e4f;
+    color: rgba(255, 255, 255, 0.9);
+    background-color: #4d4e4f;
+  }
+
+  /* #mapid>div.leaflet-control-container a,
+  #mapid>div.leaflet-control-container a:hover,
+  #mapid>div.leaflet-control-container a:active,
+  #mapid>div.leaflet-control-container a:focus {
+    background: #3d3e3f;
+    color: rgba(255, 255, 255, 0.9);
+  } */
+  /* invert background-image property */
+  #mapid>div.leaflet-control-container a {
+    /* filter: invert(100%); */
+  }
+
+  /* toasts */
+  .ui.toast-container .ui.toast {
+    background-color: #414141;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .ui.toast-container .ui.toast.error {
+    background-color: #2e0808;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .ui.toast-container .ui.toast.warning {
+    background-color: #3f2f04;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .ui.toast-container .ui.toast.success {
+    background-color: #0a3815;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .ui.toast-container .ui.toast.info {
+    background-color: #052b33;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
 }

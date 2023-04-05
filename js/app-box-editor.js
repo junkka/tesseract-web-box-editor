@@ -10,16 +10,22 @@ var lineIsDirty = false;
 var unicodeData;
 
 class Box {
-  constructor({ text, x1, y1, x2, y2, polyid, filled = false, visited = false, verified = false }) {
+  constructor({ text, x1, y1, x2, y2, polyid, visited = false, verified = false }) {
     this.text = text
     this.x1 = x1
     this.y1 = y1
     this.x2 = x2
     this.y2 = y2
     this.polyid = polyid
-    this.filled = filled
+    // ternary operator to set default value
+    this.filled = text != "" ? true : false
     this.visited = visited
     this.verified = verified
+    this.modified = false
+  }
+  // compare function for .equals
+  equals(other) {
+    return this.text == other.text && this.x1 == other.x1 && this.y1 == other.y1 && this.x2 == other.x2 && this.y2 == other.y2
   }
 }
 
@@ -34,7 +40,8 @@ boxInactive = {
   color: 'gray',
   stroke: true,
   weight: 1,
-  opacity: 0.5
+  opacity: 0.5,
+  fillOpacity: 0.3
 }
 boxVisited = {
   color: 'green',
@@ -128,9 +135,11 @@ function setStyle(rect) {
 
 }
 
-function removeStyle(rect) {
-  if (rect) {
+function removeStyle(rect, modified = false) {
+  if (rect && modified) {
     rect.setStyle(boxVisited)
+  } else if (rect) {
+    rect.setStyle(boxInactive)
   }
 }
 
@@ -143,8 +152,8 @@ function focusRectangle(rect) {
   setStyle(rect)
 }
 
-function focusBoxID(id) {
-  removeStyle(selectedPoly)
+function focusBoxID(id, modified = false) {
+  removeStyle(selectedPoly, modified)
   var rect = boxlayer.getLayer(id);
   focusRectangle(rect)
   $('#formtxt').focus();
@@ -315,41 +324,49 @@ function updateRect(polyid, d) {
   rect.setBounds(newbounds)
 }
 
-var doneMovingInterval = 200,
+var doneMovingInterval = 100,
   movingTimer;
 
 
 function getNextAndFill() {
-  submitText();
+  var modified = submitText();
   var box = getNextBB(selectedBox);
   setFromData(box);
   // setFromData(selectedBox);
 
   clearTimeout(movingTimer);
-  movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid);
+  movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid, modified);
 }
 
 function getPrevAndFill() {
-  submitText();
+  var modified = submitText();
   var box = getPrevtBB(selectedBox);
   setFromData(box);
   // setFromData(selectedBox);
   clearTimeout(movingTimer);
-  movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid);
+  movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid, modified);
 }
 
 function onBoxInputChange(e) {
 
   var polyid = parseInt($('#formtxt').attr('boxid'));
   //       console.log("polyig;", polyid, "val", $('#formtxt').val())
-  var newdata = {
+  // var newdata = {
+  //   text: $('#formtxt').val(),
+  //   x1: parseInt($('#x1').val()),
+  //   y1: parseInt($('#y1').val()),
+  //   x2: parseInt($('#x2').val()),
+  //   y2: parseInt($('#y2').val())
+  // }
+  var newdata = new Box({
     text: $('#formtxt').val(),
     x1: parseInt($('#x1').val()),
     y1: parseInt($('#y1').val()),
     x2: parseInt($('#x2').val()),
     y2: parseInt($('#y2').val())
-  }
-  updateBoxdata(polyid, newdata)
+  })
+
+  var modified = updateBoxdata(polyid, newdata)
   updateRect(polyid, newdata)
   //     fillAndFocusRect(selectedBox)
 }
@@ -377,13 +394,6 @@ function submitText(e) {
     e.preventDefault();
   }
   var polyid = parseInt($('#formtxt').attr('boxid'));
-  // var newdata = {
-  //   text: $('#formtxt').val(),
-  //   x1: parseInt($('#x1').val()),
-  //   y1: parseInt($('#y1').val()),
-  //   x2: parseInt($('#x2').val()),
-  //   y2: parseInt($('#y2').val())
-  // }
   var newdata = new Box({
     text: $('#formtxt').val(),
     x1: parseInt($('#x1').val()),
@@ -391,22 +401,32 @@ function submitText(e) {
     x2: parseInt($('#x2').val()),
     y2: parseInt($('#y2').val())
   })
-  updateBoxdata(polyid, newdata)
+  var modified = updateBoxdata(polyid, newdata)
   updateRect(polyid, newdata)
+  return modified;
 }
 
 function updateBoxdata(id, d) {
+  modified = false;
   var thebox = boxdata.findIndex(function (x) {
     return x.polyid == id;
   });
   // var ndata = Object.assign(new Box(), boxdata[thebox], d);
   // boxdata[thebox] = ndata
   d.polyid = id
+  // check if data is different
+  if (boxdata[thebox].modified || !boxdata[thebox].equals(d)) {
+    modified = true;
+    if (boxdata[thebox].text != "") {
+      d.modified = true;
+    }
+  }
   boxdata[thebox] = d
   // remember stuff is dirty
   boxdataIsDirty = true;
   lineIsDirty = false;
   updateProgressBar({ type: 'tagging' });
+  return modified;
 }
 
 function disableEdit(rect) {
@@ -665,24 +685,49 @@ function updateProgressBar(options = {}) {
     $('#editingProgress .label').text('');
     return;
   }
-
   if (options.type == 'tagging') {
-    // remove indicating and active class from #editingProgress
-    $('#editingProgress').removeClass('active');
-    $('#editingProgress').removeClass('indicating');
-    // get all lines with text
-    var linesWithText = boxdata.filter(function (el) {
-      return el.text != '';
-    });
-    $('#editingProgress')
-      .progress({
-        value: linesWithText.length,
-        total: boxdata.length,
-        text: {
-          active: 'Tagging: {value} of {total} lines tagged'
-        }
-      })
-      ;
+    // if all lines are tagged, indicate modification progress
+    if (boxdata.every(function (el) {
+      return el.filled;
+    })) {
+      // count number of lines with modifications
+      var linesWithModifications = boxdata.filter(function (el) {
+        return el.modified;
+      });
+      // $('#editingProgress').removeClass('indicating');
+      // $('#editingProgress').addClass('active');
+      $('#editingProgress')
+        .progress({
+          value: linesWithModifications.length,
+          total: boxdata.length,
+          text: {
+            active: 'Updating: {value} of {total} lines modified'
+          }
+        });
+      return;
+    } else {
+      // remove indicating and active class from #editingProgress
+      $('#editingProgress').removeClass('active');
+      $('#editingProgress').removeClass('indicating');
+      // get all lines with text
+      var linesWithText = boxdata.filter(function (el) {
+        return el.filled;
+      });
+      $('#editingProgress')
+        .progress({
+          value: linesWithText.length,
+          total: boxdata.length,
+          text: {
+            active: 'Tagging: {value} of {total} lines tagged'
+          }
+        });
+      var currentPosition = boxdata.indexOf(selectedBox);
+      $('#positionProgress')
+        .progress({
+          value: currentPosition + 1,
+          total: boxdata.length,
+        });
+    }
     return;
   } else {
     // add indicating class to #editingProgress

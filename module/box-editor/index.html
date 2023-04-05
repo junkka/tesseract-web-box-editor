@@ -132,6 +132,9 @@
     </div>
     <div id="taggingSegment" class="ui disable secondary segment">
       <div id="main-edit-area" class="ui basic fitted segment">
+        <div class="ui top attached progress" id="positionProgress">
+          <div class="bar"></div>
+        </div>
         <div class="ui maprow fitted segment" id="mapid"></div>
         <div class="ui tiny indicating progress" id="editingProgress">
           <div class="bar"></div>
@@ -145,8 +148,8 @@
           </div>
           <div class="field">
             <label class="col-sm-2 control-label" for="formtxt" id="txtlabel">Text</label>
-            <input disabled type="text" id="formtxt" boxid="" name="txt" value=""
-              onkeyup="updateBackground()" onchange="setLineIsDirty()">
+            <input disabled type="text" id="formtxt" boxid="" name="txt" value="" onkeyup="updateBackground()"
+              onchange="setLineIsDirty()">
           </div>
         </form>
         <div class="ui mini blue empty circular label"></div>

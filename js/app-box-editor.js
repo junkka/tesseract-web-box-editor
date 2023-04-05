@@ -81,9 +81,9 @@ function getPrevtBB(box) {
   var el = boxdata.findIndex(function (x) {
     return x.polyid == box.polyid;
   });
-  // if (el === 0) {
-  if (el == boxdata.length) {
-    return boxdata[el]
+  if (el === 0) {
+  // if (el == boxdata.length) {
+    return boxdata[boxdata.length - 1]
   }
   return boxdata[el - 1];
 }
@@ -96,10 +96,10 @@ function getNextBB(box) {
   var el = boxdata.findIndex(function (x) {
     return x.polyid == box.polyid;
   });
-  if (el == boxdata.length) {
-    return boxdata[el]
+  if (el == boxdata.length - 1) {
+    return boxdata[0]
   }
-  return boxdata[el + 1];
+  return boxdata[el+1];
 }
 
 function fillAndFocusRect(box) {

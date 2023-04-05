@@ -960,7 +960,7 @@ $(document).ready(async function () {
     minZoom: -1,
     center: [0, 0],
     zoom: 0,
-    zoomSnap: .25,
+    zoomSnap: .5,
     scrollWheelZoom: true,
     touchZoom: true,
     zoomControl: false,

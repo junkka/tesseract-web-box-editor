@@ -838,7 +838,6 @@ async function setLineIsDirty() {
 
 // Function to update the background with the colorized text
 async function updateBackground(e) {
-  setLineIsDirty();
   var input = document.getElementById("formtxt");
   console.log(input.value);
   var text = input.value;

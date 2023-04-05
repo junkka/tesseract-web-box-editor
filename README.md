@@ -1,37 +1,50 @@
 Web-based Box Editor for Tesseract OCR
 -------------
 
-Use app » [Box Editor for Tesseract OCR](http://penteliuc.com/utilities/box-editor/)
+Use app » [Box Editor for Tesseract OCR](https://www.penteliuc.com/box-editor-for-tesseract/)
 
-![screenshot](img/app-screenshot-1-min.png)
+![screenshot](img/app-screenshot-3-min.png)
 
-Web app for editing Tesseract OCR box files, using the [leaflet mapping library](http://leafletjs.com) and [leaflet.draw](https://github.com/Leaflet/Leaflet.draw).
-Supports simple character-by-character box editing and WordStr format.
-The box file format is detected automatically at upload.
+Web app for editing Tesseract OCR LSTM box files in WordStr format, using [Tesseract OCR js](https://tesseract.projectnaptha.com), [leaflet mapping library](http://leafletjs.com), and [leaflet.draw](https://github.com/Leaflet/Leaflet.draw).
+
+### Features
+* Automatically detects text lines;
+* Tools for adding, editing, and deleting bounding boxes;
+* Upload existing box files;
+* Download tagged text;
+* Highlights Latin and Cyrillic characters;
+* Be notified of potential issues and errors;
+* Indicates document tagging progress;
+
 
 ### How to use
-Upload an image and its corresponding box file.
-Edit each box's info by typing the characters visible inside the box into the `Text` field.
-Adjust a box's bounds using the `Left`, `Bottom`, `Right`, and `Top` fields.
-Add new boxes by drawing them with the `Rectangle` tool.
-Delete the selected box by clicking on the `Trash` icon.
+1. Upload an image and wait for bounding boxes to be automatically generated.
+  - optionally, upload an existing box file to edit.
+2. Correct generated bounding boxes.
+  - add new boxes using the draw tool;
+  - remove boxes using the delete tool;
+  - edit boxes by clicking on them and dragging the handles, or adjusting the `Left`, `Bottom`, `Right`, and `Top` input fields.
+3. Type the ground-truth into the text field.
+4. Press `Return` or the `Next` button to commit the current text line.
+5. Download the edited box file using the `Download` button.
 
-Press the `Return` key after editing to commit and move to the next box.
-Use the `Previous` and `Next` buttons to navigate boxes.
 Keyboard shortcuts are available to navigate forward `control + shift + down` and backward `control + shift + up`.
-
-Currently, the app does not work properly if no box file is uploaded.
+NOTE: Keyboard shortcuts implementation is buggy and needs fixing.
 
 ### Features to add
-- [ ] Visual confirmation of successful line update;
-- [ ] Generate box file from scratch;
 - [ ] Keep session data using cookies;
-- [ ] Notify users of background actions.
+- [x] Upload ground-truth to fill boxes;
+- [x] Download ground-truth from the box file;
+- [ ] Add options to text highlighter;
+- [ ] Fully support char-by-char tagging[^1];
+- [ ] Add Dark Mode support;
 
 ### Acknowledgment
-This work was supported by a grant of the Ministry of Research, Innovation and Digitization, CCCDI - UEFISCDI, project number PN-III-P2-2.1-PED-2021-0693, within PNCDI III.
+This work was supported by a grant from the Ministry of Research, Innovation and Digitization, CCCDI - UEFISCDI, project number PN-III-P2-2.1-PED-2021-0693, within PNCDI III.
 
-Project website: [https://transitional-romanian-transliteration.azurewebsites.net](https://transitional-romanian-transliteration.azurewebsites.net) (pending...)
+Project website: [https://transitional-romanian-transliteration.azurewebsites.net](https://transitional-romanian-transliteration.azurewebsites.net)
 
 ----------
-Original Source by [Johan Junkka](http://johanjunkka.com/)
+Original Source Code by [Johan Junkka](http://johanjunkka.com/)
+
+[^1]: legacy character-by-character box editing is supported, although it is not actively maintained.

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Box Editor for Tesseract</title>
+
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <script src="../../js/jquery.hotkeys.js"></script>
+
+  <!-- Leaftlet -->
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+    integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+    integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+  <script src="../../js/leaflet.js"></script>
+  <link rel="stylesheet" href="../../css/leaflet.css">
+
+  <!-- Leaflet Draw -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.3/leaflet.draw.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.3/leaflet.draw.js"></script>
+  <!-- <script src="js/leaflet.draw.js"></script>
+  <link rel="stylesheet" href="css/leaflet.draw.css" /> -->
+
+  <!-- Tesseract -->
+  <script src='https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js'></script>
+
+  <!-- Fomanic UI -->
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
+
+  <!-- Custom JS and CSS -->
+  <script src="../../js/jquery.csv.min.js"></script>
+  <script src="../../js/app-words-pairing.js"></script>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+
+<body>
+  <div class="ui container">
+    <div class="ui basic horizontal segments">
+      <div class="ui basic horizontally fitted segment">
+        <h1 class="ui header">
+          Box Editor for Tesseract
+        </h1>
+      </div>
+      <div class="ui basic horizontally fitted compact segment">
+        <div id="navigationMenu" class="ui right secondary menu">
+          <a href="../../module/box-editor" class="item">
+            Box Editor
+          </a>
+          <a  class="active item">
+            Words Pairing
+          </a>
+          <div class="item">
+            <i class="large question circle icon"></i>
+            <div class="ui fixed very wide popup">
+              <div class="header">Welcome!</div>
+              <div class="content">
+                <p>
+                  Upload an image and a <code>.box</code> file. Unique words will automatically be extracted and added to a sorted words list. Pair up each word with its translation to create a mapping file.
+                </p>
+                <p>
+                  Transliteration progress is shown below the image. When done, download the <code>.wordlist</code> file and
+                  the
+                  <code>.json</code> file to extract transliteration rules.
+                </p>
+                <div class="ui sub header">Tips</div>
+                <p>
+                  Select characters in the input field to see their Unicode name.
+                </p>
+                <p>
+                  While transliterating use <code>return</code> and <code>shift+return</code> to move forward and backward.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ui secondary segment">
+      <div class="ui two column stackable grid">
+        <div class="eight wide column">
+          <h4 class="ui dividing header">Upload Documents</h4>
+          <form class="ui form">
+            <div class="two fields">
+              <div class="field">
+                <label for="imageFile">Image</label>
+                <input class="form-control" type="file" disabled id="imageFile" name="imageFile" accept="image/*" />
+              </div>
+              <div class="field">
+                <label for="boxFile">Box File</label>
+                <input class="form-control" type="file" disabled id="boxFile" name="boxFile" accept=".box" />
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="eight wide column">
+          <h4 class="ui dividing header">Download Documents</h4>
+          <form class="ui equal width form">
+            <div class="two fields">
+              <div class="field">
+                <label for="download">Word List</label>
+                <div id="downloadWordListButton" name="download" class="disabled fluid ui button">
+                  <i class="download icon"></i>
+                  Download
+                </div>
+              </div>
+              <div class="field">
+                <label for="download">Dictionary Mapping</label>
+                <div id="downloadDictionaryMappingButton" name="download" class="disabled fluid ui button">
+                  <i class="download icon"></i>
+                  Download
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div id="taggingSegment" class="ui disable secondary segment">
+      <div id="main-edit-area" class="ui basic fitted segment">
+        <div class="ui maprow fitted segment" id="mapid"></div>
+        <div class="ui tiny indicating progress" id="editingProgress">
+          <div class="bar"></div>
+          <div class="label"></div>
+        </div>
+        <form class="ui big form" id="updateTxt">
+          <div class="two fields">
+            <div class="field">
+              <label for="source">Source</label>
+              <input type="text" id="sourceInputField" name="source" value="" readonly>
+            </div>
+            <div class="field">
+              <label for="source">Target</label>
+              <input type="text" id="targetInputField" name="target" value="">
+            </div>
+          </div>
+        </form>
+        <div class="ui center aligned basic segment">
+          <button id="previousBB" class="ui disabled left labeled icon button">
+            <i class="left chevron icon"></i>
+            Previous
+          </button>
+          <button id="nextBB" class="ui disabled right labeled icon button">
+            Next
+            <i class="right chevron icon"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="ui container">
+      <div class="ui basic fitted segments">
+        <div class="ui horizontal basic segments">
+          <div class="ui basic fitted segment">
+            <div class="ui horizontal small list">
+              <div class="item">
+                By: <a href="https://penteliuc.com">Marius E. Penteliuc</a>
+              </div>
+            </div>
+          </div>
+          <div class="ui right aligned basic fitted segment">
+            <a href="https://github.com/mariuspenteliuc/box-editor-for-tesseract" target="_blank">
+              <i class="github icon"></i>
+            </a>
+          </div>
+        </div>
+        <div class="ui basic horizontally fitted segment">
+          <p>This work was supported by a grant of the Romanian Ministry of Research, Innovation and Digitization, CCCDI
+            -
+            UEFISCDI,
+            project number PN-III-P2-2.1-PED-2021-0693, within PNCDI III.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  </div>
+
+</body>
+
+</html>

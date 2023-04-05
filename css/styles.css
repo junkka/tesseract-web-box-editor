@@ -47,12 +47,28 @@
 .cyrillic {
   color: #db2828;
 }
-
 .latin {
   color: #2185d0;
 }
+/* Captial letters lighter */
+.cyrillic.capital {
+  color: #e66a6a;
+}
+.latin.capital {
+  color: #59a9e5;
+}
+
 .space {
   color: transparent;
+}
+
+div.ui.mini.red.empty.circular.label {
+  background: linear-gradient(to bottom, #e66a6a 50%, #db2828 50%);
+  border-radius:7000;
+}
+div.ui.mini.blue.empty.circular.label {
+  background: linear-gradient(to bottom, #59a9e5 50%, #2185d0 50%);
+  border-radius:7000;
 }
 
 #myInputContainer {
@@ -61,7 +77,8 @@
   /* display: inline-block; */
 }
 
-#myInputBackground {
+/* TODO: fix issue with special characters not being displayed with proper font */
+#updateTxt #myInputContainer #myInputBackground {
   /* position: absolute; */
   top: 0;
   left: 0;
@@ -101,5 +118,7 @@
   background-color: transparent;
   /* border: none; */
   /* outline: none; */
+  /* font-size: 20px; */
+  /* line-height: 1.21428571em; */
   font-family: Lato, system-ui, -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }

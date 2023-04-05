@@ -81,9 +81,9 @@ function getPrevtBB(box) {
   var el = boxdata.findIndex(function (x) {
     return x.polyid == box.polyid;
   });
-  // if (el === 0) {
-  if (el == boxdata.length) {
-    return boxdata[el]
+  if (el === 0) {
+  // if (el == boxdata.length) {
+    return boxdata[boxdata.length - 1]
   }
   return boxdata[el - 1];
 }
@@ -96,10 +96,10 @@ function getNextBB(box) {
   var el = boxdata.findIndex(function (x) {
     return x.polyid == box.polyid;
   });
-  if (el == boxdata.length) {
-    return boxdata[el]
+  if (el == boxdata.length - 1) {
+    return boxdata[0]
   }
-  return boxdata[el + 1];
+  return boxdata[el+1];
 }
 
 function fillAndFocusRect(box) {
@@ -838,7 +838,6 @@ async function setLineIsDirty() {
 
 // Function to update the background with the colorized text
 async function updateBackground(e) {
-  setLineIsDirty();
   var input = document.getElementById("formtxt");
   console.log(input.value);
   var text = input.value;
@@ -972,7 +971,7 @@ $(document).ready(async function () {
     minZoom: -1,
     center: [0, 0],
     zoom: 0,
-    zoomSnap: .25,
+    zoomSnap: .5,
     scrollWheelZoom: true,
     touchZoom: true,
     zoomControl: false,

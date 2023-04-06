@@ -935,6 +935,10 @@ function getUnicodeData(code) {
 
 
 $(document).ready(async function () {
+  $('#formtxt').on('input', function () {
+    updateBackground();
+    setLineIsDirty();
+  });
   $('#imageFile').prop('disabled', false);
   // displayMessage({ message: 'Hover over the question mark in the top right corner for help and keyboard shortcuts.' });
 

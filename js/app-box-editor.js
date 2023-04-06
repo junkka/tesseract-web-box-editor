@@ -9,6 +9,26 @@ var boxdataIsDirty = false;
 var lineIsDirty = false;
 var unicodeData;
 
+class Box {
+  constructor({ text, x1, y1, x2, y2, polyid, visited = false, verified = false }) {
+    this.text = text
+    this.x1 = x1
+    this.y1 = y1
+    this.x2 = x2
+    this.y2 = y2
+    this.polyid = polyid
+    // ternary operator to set default value
+    this.filled = text != "" ? true : false
+    this.visited = visited
+    this.verified = verified
+    this.modified = false
+  }
+  // compare function for .equals
+  equals(other) {
+    return this.text == other.text && this.x1 == other.x1 && this.y1 == other.y1 && this.x2 == other.x2 && this.y2 == other.y2
+  }
+}
+
 boxActive = {
   color: 'red',
   weight: 3,
@@ -20,7 +40,8 @@ boxInactive = {
   color: 'gray',
   stroke: true,
   weight: 1,
-  opacity: 0.5
+  opacity: 0.5,
+  fillOpacity: 0.3
 }
 boxVisited = {
   color: 'green',
@@ -114,9 +135,11 @@ function setStyle(rect) {
 
 }
 
-function removeStyle(rect) {
-  if (rect) {
+function removeStyle(rect, modified = false) {
+  if (rect && modified) {
     rect.setStyle(boxVisited)
+  } else if (rect) {
+    rect.setStyle(boxInactive)
   }
 }
 
@@ -129,8 +152,8 @@ function focusRectangle(rect) {
   setStyle(rect)
 }
 
-function focusBoxID(id) {
-  removeStyle(selectedPoly)
+function focusBoxID(id, modified = false) {
+  removeStyle(selectedPoly, modified)
   var rect = boxlayer.getLayer(id);
   focusRectangle(rect)
   $('#formtxt').focus();
@@ -154,13 +177,20 @@ function processFile(e) {
           if (line.length > 5) {
 
             var temp = line.split(" ");
-            var symbole = {
+            // var symbole = {
+            //   text: temp[0],
+            //   x1: parseInt(temp[1]),
+            //   y1: parseInt(temp[2]),
+            //   x2: parseInt(temp[3]),
+            //   y2: parseInt(temp[4])
+            // }
+            var symbole = new Box({
               text: temp[0],
               x1: parseInt(temp[1]),
               y1: parseInt(temp[2]),
               x2: parseInt(temp[3]),
               y2: parseInt(temp[4])
-            }
+            })
             var rect = new L.rectangle([[symbole.y1, symbole.x1], [symbole.y2, symbole.x2]]);
             rect.setStyle(boxInactive);
             rect.on('edit', editRect);
@@ -180,23 +210,37 @@ function processFile(e) {
           if (line.startsWith("WordStr ")) {
             var [dimensions, wordStr] = line.split('#')
             dimensions = dimensions.split(" ")
-            symbole = {
+            // symbole = {
+            //   text: wordStr,
+            //   x1: parseInt(dimensions[1]),
+            //   y1: parseInt(dimensions[2]),
+            //   x2: parseInt(dimensions[3]),
+            //   y2: parseInt(dimensions[4])
+            // }
+            symbole = new Box({
               text: wordStr,
               x1: parseInt(dimensions[1]),
               y1: parseInt(dimensions[2]),
               x2: parseInt(dimensions[3]),
               y2: parseInt(dimensions[4])
-            }
+            })
           } else if (!IgnoreEOFBox && line.startsWith("\t ")) {
             var [dimensions, wordStr] = line.split('#')
             dimensions = dimensions.split(" ")
-            symbole = {
+            // symbole = {
+            //   text: dimensions[0],
+            //   x1: parseInt(dimensions[1]),
+            //   y1: parseInt(dimensions[2]),
+            //   x2: parseInt(dimensions[3]),
+            //   y2: parseInt(dimensions[4])
+            // }
+            symbole = new Box({
               text: dimensions[0],
               x1: parseInt(dimensions[1]),
               y1: parseInt(dimensions[2]),
               x2: parseInt(dimensions[3]),
               y2: parseInt(dimensions[4])
-            }
+            })
           } else {
             // if (line == "") {
             return
@@ -280,41 +324,49 @@ function updateRect(polyid, d) {
   rect.setBounds(newbounds)
 }
 
-var doneMovingInterval = 200,
+var doneMovingInterval = 100,
   movingTimer;
 
 
 function getNextAndFill() {
-  submitText();
+  var modified = submitText();
   var box = getNextBB(selectedBox);
   setFromData(box);
   // setFromData(selectedBox);
 
   clearTimeout(movingTimer);
-  movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid);
+  movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid, modified);
 }
 
 function getPrevAndFill() {
-  submitText();
+  var modified = submitText();
   var box = getPrevtBB(selectedBox);
   setFromData(box);
   // setFromData(selectedBox);
   clearTimeout(movingTimer);
-  movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid);
+  movingTimer = setTimeout(focusBoxID, doneMovingInterval, box.polyid, modified);
 }
 
 function onBoxInputChange(e) {
 
   var polyid = parseInt($('#formtxt').attr('boxid'));
   //       console.log("polyig;", polyid, "val", $('#formtxt').val())
-  var newdata = {
+  // var newdata = {
+  //   text: $('#formtxt').val(),
+  //   x1: parseInt($('#x1').val()),
+  //   y1: parseInt($('#y1').val()),
+  //   x2: parseInt($('#x2').val()),
+  //   y2: parseInt($('#y2').val())
+  // }
+  var newdata = new Box({
     text: $('#formtxt').val(),
     x1: parseInt($('#x1').val()),
     y1: parseInt($('#y1').val()),
     x2: parseInt($('#x2').val()),
     y2: parseInt($('#y2').val())
-  }
-  updateBoxdata(polyid, newdata)
+  })
+
+  var modified = updateBoxdata(polyid, newdata)
   updateRect(polyid, newdata)
   //     fillAndFocusRect(selectedBox)
 }
@@ -342,27 +394,39 @@ function submitText(e) {
     e.preventDefault();
   }
   var polyid = parseInt($('#formtxt').attr('boxid'));
-  var newdata = {
+  var newdata = new Box({
     text: $('#formtxt').val(),
     x1: parseInt($('#x1').val()),
     y1: parseInt($('#y1').val()),
     x2: parseInt($('#x2').val()),
     y2: parseInt($('#y2').val())
-  }
-  updateBoxdata(polyid, newdata)
+  })
+  var modified = updateBoxdata(polyid, newdata)
   updateRect(polyid, newdata)
+  return modified;
 }
 
 function updateBoxdata(id, d) {
+  modified = false;
   var thebox = boxdata.findIndex(function (x) {
     return x.polyid == id;
   });
-  var ndata = Object.assign({}, boxdata[thebox], d);
-  boxdata[thebox] = ndata
+  // var ndata = Object.assign(new Box(), boxdata[thebox], d);
+  // boxdata[thebox] = ndata
+  d.polyid = id
+  // check if data is different
+  if (boxdata[thebox].modified || !boxdata[thebox].equals(d)) {
+    modified = true;
+    if (boxdata[thebox].text != "") {
+      d.modified = true;
+    }
+  }
+  boxdata[thebox] = d
   // remember stuff is dirty
   boxdataIsDirty = true;
   lineIsDirty = false;
   updateProgressBar({ type: 'tagging' });
+  return modified;
 }
 
 function disableEdit(rect) {
@@ -466,25 +530,27 @@ async function generateInitialBoxes(image) {
 
   // get bounding boxes from results.data.lines
   var lines = results.data.lines;
-  var boxes = [];
+  // var boxes = [];
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i];
     var box = line.bbox;
     var text = line.text;
-    boxes.push([text, box.x0, box.y0, box.x1, box.y1]);
+    // boxes.push([text, box.x0, box.y0, box.x1, box.y1]);
     // console.log(text, box)
-    var symbole = {
-      // text: text,
+    // var symbole = {
+    //   text: '',
+    //   y1: image.height - box.y1, // bottom
+    //   y2: image.height - box.y0, // top
+    //   x1: box.x0, // right
+    //   x2: box.x1 // left
+    // }
+    var symbole = new Box({
       text: '',
-      // x1: box.x0,
-      // y1: image.height - box.y0,
-      // x2: box.x1,
-      // y2: image.height - box.y1,
       y1: image.height - box.y1, // bottom
       y2: image.height - box.y0, // top
       x1: box.x0, // right
       x2: box.x1 // left
-    }
+    })
     var rect = new L.rectangle([[symbole.y1, symbole.x1], [symbole.y2, symbole.x2]]);
     rect.on('edit', editRect);
     rect.on('click', onRectClick);
@@ -620,24 +686,49 @@ function updateProgressBar(options = {}) {
     $('#editingProgress .label').text('');
     return;
   }
-
   if (options.type == 'tagging') {
-    // remove indicating and active class from #editingProgress
-    $('#editingProgress').removeClass('active');
-    $('#editingProgress').removeClass('indicating');
-    // get all lines with text
-    var linesWithText = boxdata.filter(function (el) {
-      return el.text != '';
-    });
-    $('#editingProgress')
-      .progress({
-        value: linesWithText.length,
-        total: boxdata.length,
-        text: {
-          active: 'Tagging: {value} of {total} lines tagged'
-        }
-      })
-      ;
+    // if all lines are tagged, indicate modification progress
+    if (boxdata.every(function (el) {
+      return el.filled;
+    })) {
+      // count number of lines with modifications
+      var linesWithModifications = boxdata.filter(function (el) {
+        return el.modified;
+      });
+      // $('#editingProgress').removeClass('indicating');
+      // $('#editingProgress').addClass('active');
+      $('#editingProgress')
+        .progress({
+          value: linesWithModifications.length,
+          total: boxdata.length,
+          text: {
+            active: 'Updating: {value} of {total} lines modified'
+          }
+        });
+      return;
+    } else {
+      // remove indicating and active class from #editingProgress
+      $('#editingProgress').removeClass('active');
+      $('#editingProgress').removeClass('indicating');
+      // get all lines with text
+      var linesWithText = boxdata.filter(function (el) {
+        return el.filled;
+      });
+      $('#editingProgress')
+        .progress({
+          value: linesWithText.length,
+          total: boxdata.length,
+          text: {
+            active: 'Tagging: {value} of {total} lines tagged'
+          }
+        });
+      var currentPosition = boxdata.indexOf(selectedBox);
+      $('#positionProgress')
+        .progress({
+          value: currentPosition + 1,
+          total: boxdata.length,
+        });
+    }
     return;
   } else {
     // add indicating class to #editingProgress
@@ -1073,14 +1164,22 @@ $(document).ready(async function () {
     boxlayer.addLayer(layer);
     var polyid = boxlayer.getLayerId(layer)
     //     console.log(layer._leaflet_id, layer)
-    var newbb = {
-      polyid: layer._leaflet_id,
+    // var newbb = {
+    //   polyid: layer._leaflet_id,
+    //   text: '',
+    //   x1: Math.round(layer._latlngs[0][0].lng),
+    //   y1: Math.round(layer._latlngs[0][0].lat),
+    //   x2: Math.round(layer._latlngs[0][2].lng),
+    //   y2: Math.round(layer._latlngs[0][2].lat)
+    // }
+    var newbb = new Box({
+      polyid: polyid,
       text: '',
       x1: Math.round(layer._latlngs[0][0].lng),
       y1: Math.round(layer._latlngs[0][0].lat),
       x2: Math.round(layer._latlngs[0][2].lng),
       y2: Math.round(layer._latlngs[0][2].lat)
-    }
+    })
     // get intdex of prebious
     // console.log("prev", selectedBox)
     // console.log(selectedBox)

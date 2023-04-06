@@ -37,7 +37,7 @@ NOTE: Keyboard shortcuts implementation is buggy and needs fixing.
 - [x] Download ground-truth from the box file;
 - [ ] Add options to text highlighter;
 - [ ] Fully support char-by-char tagging[^1];
-- [ ] Add Dark Mode support;
+- [x] Add Dark Mode support;
 
 ### Acknowledgment
 This work was supported by a grant from the Ministry of Research, Innovation and Digitization, CCCDI - UEFISCDI, project number PN-III-P2-2.1-PED-2021-0693, within PNCDI III.

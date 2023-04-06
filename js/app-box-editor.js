@@ -32,6 +32,28 @@ class Box {
         this.verified = verified
         this.modified = false
     }
+    static compare(a, b) {
+        var tolerance = 100;
+        var aCenterX = (a.x1 + a.x2) / 2;
+        var aCenterY = (a.y1 + a.y2) / 2;
+        var bCenterX = (b.x1 + b.x2) / 2;
+        var bCenterY = (b.y1 + b.y2) / 2;
+        // check if at least one center is within the horizontal distance of the other box
+        if ((aCenterX > b.x1 - tolerance && aCenterX < b.x2 + tolerance) || (bCenterX > a.x1 - tolerance && bCenterX < a.x2 + tolerance)) {
+            // console.log("boxes " + a.text + " and " + b.text + " vertically aligned");
+            if (bCenterY - aCenterY < 0) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
+        // console.log("boxes " + a.text + " and " + b.text + " are not close to each other");
+        if (aCenterX - bCenterX < 0) {
+            return -1;
+        } else {
+            return 1;
+        }
+    }
     // compare function for .equals
     equals(other) {
         return this.text == other.text && this.x1 == other.x1 && this.y1 == other.y1 && this.x2 == other.x2 && this.y2 == other.y2
@@ -250,6 +272,7 @@ function processFile(e) {
 
 
         $('#formrow').removeClass('hidden');
+        sortAllBoxes();
         // select next BB
         var nextBB = getNextBB();
         fillAndFocusRect(nextBB);
@@ -449,12 +472,16 @@ async function generateInitialBoxes(image) {
         gzip: false,
         logger: m => processWorkerLogMessage(m)
     });
-    await worker.loadLanguage('LATCYR_from_Cyrillic');
+    // await worker.loadLanguage('LATCYR_from_Cyrillic');
+    // await worker.initialize('LATCYR_from_Cyrillic');
+    await worker.loadLanguage(['osd', 'LATCYR_from_Cyrillic']);
     await worker.initialize('LATCYR_from_Cyrillic');
-    // await worker.setParameters({
-    // tessedit_ocr_engine_mode: OcrEngineMode.OEM_LSTM_ONLY,
-    // tessedit_pageseg_mode: PSM_AUTO_OSD
-    // });
+    // TODO: 06/04/2023 Continue setting parameters to discover columns and not assume single block.
+    await worker.setParameters({
+        // tessedit_ocr_engine_mode: OcrEngineMode.OEM_LSTM_ONLY,
+        // tessedit_ocr_engine_mode: "OcrEngineMode.OEM_LSTM_ONLY",
+        tessedit_pageseg_mode: "PSM_AUTO_OSD"
+    });
     const results = await worker.recognize(image);
 
     // get bounding boxes from results.data.lines
@@ -765,13 +792,47 @@ function updateDownloadButtonsLabels(options = {}) {
 }
 
 // Sort boxes from top to bottom
-function sortBoxes(a, b) {
-    return b.y1 - a.y1;
-}
+// function sortBoxes(a, b) {
+//     return b.y1 - a.y1;
+// }
+
+// function sortBoxes(a, b) {
+//     // make a cluster of boxes that are close to each other
+//     // if the boxes are close to each other, then sort them from top to bottom
+//     // if the boxes are not close to each other, then sort them from left to right
+//     // var verticalDistance = 50;
+//     // var horizontalDistance = 50;
+//     // var clusterDistance = 150;
+//     var tolerance = 100;
+//     var aCenterX = (a.x1 + a.x2) / 2;
+//     var aCenterY = (a.y1 + a.y2) / 2;
+//     var bCenterX = (b.x1 + b.x2) / 2;
+//     var bCenterY = (b.y1 + b.y2) / 2;
+//     // check if at least one center is within the horizontal distance of the other box
+//     if ((aCenterX > b.x1 - tolerance && aCenterX < b.x2 + tolerance) || (bCenterX > a.x1 - tolerance && bCenterX < a.x2 + tolerance)) {
+//         // // make cluster distance a function of the size of the boxes
+//         // horizontalDistance = Math.max(Math.abs(a.x1 - a.x2), Math.abs(b.x1 - b.x2))/2;
+//         // verticalDistance = Math.max(Math.abs(a.y1 - a.y2), Math.abs(b.y1 - b.y2))*2;
+//         // if (Math.abs(aCenterX - bCenterX) < clusterDistance && Math.abs(aCenterY - bCenterY) < clusterDistance) {
+//         // if (Math.abs(aCenterY - bCenterY) < verticalDistance) {
+//         // if (Math.abs(aCenterX - bCenterX) < horizontalDistance && Math.abs(aCenterY - bCenterY) < verticalDistance) {
+//         // console.log("boxes " + a.text + " and " + b.text + " vertically aligned");
+//         return bCenterY - aCenterY;
+//         // }
+//     }
+//     // console.log("boxes " + a.text + " and " + b.text + " are not close to each other");
+//     return aCenterX - bCenterX;
+// }
+
 
 // Sort all bosees from top to bottom
 function sortAllBoxes() {
-    boxdata.sort(sortBoxes);
+    // boxdata.sort(sortBoxes);
+    // repead three times to make sure that the boxes are sorted correctly
+    // I don't know why this is necessary, but it is 🤷‍♂️
+    boxdata.sort(Box.compare);
+    boxdata.sort(Box.compare);
+    boxdata.sort(Box.compare);
 }
 
 // Define regular expressions

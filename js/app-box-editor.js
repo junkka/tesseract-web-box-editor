@@ -178,13 +178,6 @@ function processFile(e) {
           if (line.length > 5) {
 
             var temp = line.split(" ");
-            // var symbole = {
-            //   text: temp[0],
-            //   x1: parseInt(temp[1]),
-            //   y1: parseInt(temp[2]),
-            //   x2: parseInt(temp[3]),
-            //   y2: parseInt(temp[4])
-            // }
             var symbole = new Box({
               text: temp[0],
               x1: parseInt(temp[1]),
@@ -211,13 +204,6 @@ function processFile(e) {
           if (line.startsWith("WordStr ")) {
             var [dimensions, wordStr] = line.split('#')
             dimensions = dimensions.split(" ")
-            // symbole = {
-            //   text: wordStr,
-            //   x1: parseInt(dimensions[1]),
-            //   y1: parseInt(dimensions[2]),
-            //   x2: parseInt(dimensions[3]),
-            //   y2: parseInt(dimensions[4])
-            // }
             symbole = new Box({
               text: wordStr,
               x1: parseInt(dimensions[1]),
@@ -228,13 +214,6 @@ function processFile(e) {
           } else if (!IgnoreEOFBox && line.startsWith("\t ")) {
             var [dimensions, wordStr] = line.split('#')
             dimensions = dimensions.split(" ")
-            // symbole = {
-            //   text: dimensions[0],
-            //   x1: parseInt(dimensions[1]),
-            //   y1: parseInt(dimensions[2]),
-            //   x2: parseInt(dimensions[3]),
-            //   y2: parseInt(dimensions[4])
-            // }
             symbole = new Box({
               text: dimensions[0],
               x1: parseInt(dimensions[1]),
@@ -270,27 +249,29 @@ function processFile(e) {
   }
 }
 
-function editRect(e) {
+async function editRect(e) {
   var layer = e.target;
   var box = getBoxdataFromRect(layer);
-  var newd = {
-    x1: Math.round(layer._latlngs[0][0].lng),
-    y1: Math.round(layer._latlngs[0][0].lat),
-    x2: Math.round(layer._latlngs[0][2].lng),
-    y2: Math.round(layer._latlngs[0][2].lat)
-  }
+  var oldDimenstions = [box.x1, box.y1, box.x2, box.y2];
+  var newd = new Box({
+      text: box.text,
+      x1: Math.round(layer._latlngs[0][0].lng),
+      y1: Math.round(layer._latlngs[0][0].lat),
+      x2: Math.round(layer._latlngs[0][2].lng),
+      y2: Math.round(layer._latlngs[0][2].lat)
+    })
 
-  // TODO: always sync box on map with form data
-
-  updateBoxdata(layer._leaflet_id, newd);
-  console.log(e.target.getBounds());
   // update form data with new values
-  $('#x1').val(newd.x1);
-  $('#y1').val(newd.y1);
-  $('#x2').val(newd.x2);
-  $('#y2').val(newd.y2);
+  // $('#x1').val(newd.x1);
+  // $('#y1').val(newd.y1);
+  // $('#x2').val(newd.x2);
+  // $('#y2').val(newd.y2);
+  await updateBoxdata(layer._leaflet_id, newd);
 
-  fillAndFocusRect(box);
+  // new dimensions
+    var newDimenstions = [newd.x1, newd.y1, newd.x2, newd.y2];
+  console.log("moved box ", [box.polyid, box.text], " from ", oldDimenstions, " to ", newDimenstions);
+  fillAndFocusRect(newd);
 }
 
 function deleteBox(box) {
@@ -935,7 +916,6 @@ async function setLineIsDirty() {
 // Function to update the background with the colorized text
 async function updateBackground(e) {
   var input = document.getElementById("formtxt");
-  console.log(input.value);
   var text = input.value;
   var colored_text = await colorize(text);
   var background = document.getElementById("myInputBackground");

@@ -342,33 +342,16 @@ function onBoxInputChange(e) {
   // }
   var newdata = new Box({
     text: $('#formtxt').val(),
-    x1: parseInt($('#x1').val()),
-    y1: parseInt($('#y1').val()),
-    x2: parseInt($('#x2').val()),
-    y2: parseInt($('#y2').val())
+    x1: parseInt(Math.round($('#x1').val())),
+    y1: parseInt(Math.round($('#y1').val())),
+    x2: parseInt(Math.round($('#x2').val())),
+    y2: parseInt(Math.round($('#y2').val()))
   })
 
   var modified = updateBoxdata(polyid, newdata)
   updateRect(polyid, newdata)
   //     fillAndFocusRect(selectedBox)
 }
-
-$('#x1').on('input', function (e) {
-  clearTimeout(movingTimer);
-  movingTimer = setTimeout(onBoxInputChange, doneMovingInterval);
-});
-$('#y1').on('input', function (e) {
-  clearTimeout(movingTimer);
-  movingTimer = setTimeout(onBoxInputChange, doneMovingInterval);
-});
-$('#x2').on('input', function (e) {
-  clearTimeout(movingTimer);
-  movingTimer = setTimeout(onBoxInputChange, doneMovingInterval);
-});
-$('#y2').on('input', function (e) {
-  clearTimeout(movingTimer);
-  movingTimer = setTimeout(onBoxInputChange, doneMovingInterval);
-});
 
 $('#updateTxt').on('submit', getNextAndFill);
 function submitText(e) {
@@ -1104,6 +1087,22 @@ $(document).ready(async function () {
   $('#formtxt').on('input', function () {
     updateBackground();
     setLineIsDirty();
+  });
+  $('#x1').on('input', function (e) {
+    clearTimeout(movingTimer);
+    movingTimer = setTimeout(onBoxInputChange, doneMovingInterval);
+  });
+  $('#y1').on('input', function (e) {
+    clearTimeout(movingTimer);
+    movingTimer = setTimeout(onBoxInputChange, doneMovingInterval);
+  });
+  $('#x2').on('input', function (e) {
+    clearTimeout(movingTimer);
+    movingTimer = setTimeout(onBoxInputChange, doneMovingInterval);
+  });
+  $('#y2').on('input', function (e) {
+    clearTimeout(movingTimer);
+    movingTimer = setTimeout(onBoxInputChange, doneMovingInterval);
   });
   $('#imageFile').prop('disabled', false);
   // displayMessage({ message: 'Hover over the question mark in the top right corner for help and keyboard shortcuts.' });

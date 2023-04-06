@@ -615,6 +615,11 @@ function updateProgressBar(options = {}) {
         return;
     }
     if (options.type == 'tagging') {
+        var currentPosition = boxdata.indexOf(selectedBox);
+        $('#positionProgress').progress({
+            value: currentPosition + 1,
+            total: boxdata.length
+        });
         if (boxdata.every(function (el) {
             return el.filled;
         })) {
@@ -641,11 +646,6 @@ function updateProgressBar(options = {}) {
                 text: {
                     active: 'Tagging: {value} of {total} lines tagged'
                 }
-            });
-            var currentPosition = boxdata.indexOf(selectedBox);
-            $('#positionProgress').progress({
-                value: currentPosition + 1,
-                total: boxdata.length
             });
         }
         return;

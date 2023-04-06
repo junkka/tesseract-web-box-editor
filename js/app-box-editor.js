@@ -82,7 +82,7 @@ function getPrevtBB(box) {
     return x.polyid == box.polyid;
   });
   if (el === 0) {
-  // if (el == boxdata.length) {
+    // if (el == boxdata.length) {
     return boxdata[boxdata.length - 1]
   }
   return boxdata[el - 1];
@@ -99,7 +99,7 @@ function getNextBB(box) {
   if (el == boxdata.length - 1) {
     return boxdata[0]
   }
-  return boxdata[el+1];
+  return boxdata[el + 1];
 }
 
 function fillAndFocusRect(box) {
@@ -936,6 +936,63 @@ function getUnicodeData(code) {
   return result;
 }
 
+async function downloadBoxFile(e) {
+  if (e) {
+    e.preventDefault();
+  }
+  if (boxdata.length == 0) {
+    displayMessage({ type: 'warning', message: 'No box files to download.' });
+    return;
+  }
+  if (lineIsDirty) {
+    displayMessage({ type: 'warning', message: 'Please commit the current line before downloading.' });
+    return;
+  }
+  sortAllBoxes()
+  var fileExtension = '.box'
+  var content = '';
+  if (boxFileType == BoxFileType.CHAR_OR_LINE) {
+    $.each(boxdata, function () {
+      content = content + this.text + ' ' + this.x1 + ' ' + this.y1 + ' ' + this.x2 + ' ' + this.y2 + ' 0\n'
+    })
+  }
+  if (boxFileType == BoxFileType.WORDSTR) {
+    $.each(boxdata, function () {
+      content = content + 'WordStr ' + this.x1 + ' ' + this.y1 + ' ' + this.x2 + ' ' + this.y2 + ' 0 #' + this.text + '\n';
+      content = content + '\t ' + (this.x2 + 1) + ' ' + this.y1 + ' ' + (this.x2 + 5) + ' ' + this.y2 + ' 0\n';
+    })
+  }
+  downloadFile(content, fileExtension);
+}
+
+async function downloadGroundTruth(e) {
+  if (e) {
+    e.preventDefault();
+  }
+  if (boxdata.length == 0) {
+    displayMessage({ type: 'warning', message: 'No ground-truth to download.' });
+    return;
+  }
+  if (lineIsDirty) {
+    displayMessage({ type: 'warning', message: 'Please commit the current line before downloading.' });
+    return;
+  }
+  sortAllBoxes()
+  var fileExtension = '.gt.txt'
+  var content = '';
+  if (boxFileType == BoxFileType.CHAR_OR_LINE) {
+    $.each(boxdata, function () {
+      content = content + this.text + '\n'
+    })
+  }
+  if (boxFileType == BoxFileType.WORDSTR) {
+    $.each(boxdata, function () {
+      content = content + this.text + '\n';
+    })
+  }
+  downloadFile(content, fileExtension);
+}
+
 
 $(document).ready(async function () {
   $('#formtxt').on('input', function () {
@@ -993,56 +1050,6 @@ $(document).ready(async function () {
   //   load Image
   $("#imageFile").change(loadImageFile);
 
-  $('#downloadBoxFileButton').on('click', async function (e) {
-    if (boxdata.length == 0) {
-      displayMessage({ type: 'warning', message: 'No box files to download.' });
-      return;
-    }
-    if (lineIsDirty) {
-      displayMessage({ type: 'warning', message: 'Please commit the current line before downloading.' });
-      return;
-    }
-    sortAllBoxes()
-    var fileExtension = '.box'
-    var content = '';
-    if (boxFileType == BoxFileType.CHAR_OR_LINE) {
-      $.each(boxdata, function () {
-        content = content + this.text + ' ' + this.x1 + ' ' + this.y1 + ' ' + this.x2 + ' ' + this.y2 + ' 0\n'
-      })
-    }
-    if (boxFileType == BoxFileType.WORDSTR) {
-      $.each(boxdata, function () {
-        content = content + 'WordStr ' + this.x1 + ' ' + this.y1 + ' ' + this.x2 + ' ' + this.y2 + ' 0 #' + this.text + '\n';
-        content = content + '\t ' + (this.x2 + 1) + ' ' + this.y1 + ' ' + (this.x2 + 5) + ' ' + this.y2 + ' 0\n';
-      })
-    }
-    downloadFile(content, fileExtension);
-  });
-  $('#downloadGroundTruthButton').on('click', async function (e) {
-    if (boxdata.length == 0) {
-      displayMessage({ type: 'warning', message: 'No ground-truth to download.' });
-      return;
-    }
-    if (lineIsDirty) {
-      displayMessage({ type: 'warning', message: 'Please commit the current line before downloading.' });
-      return;
-    }
-    sortAllBoxes()
-    var fileExtension = '.gt.txt'
-    var content = '';
-    if (boxFileType == BoxFileType.CHAR_OR_LINE) {
-      $.each(boxdata, function () {
-        content = content + this.text + '\n'
-      })
-    }
-    if (boxFileType == BoxFileType.WORDSTR) {
-      $.each(boxdata, function () {
-        content = content + this.text + '\n';
-      })
-    }
-    downloadFile(content, fileExtension);
-  });
-
   // delete rect
   map.on('draw:deleted', function (event) {
     // get boxdata
@@ -1098,6 +1105,8 @@ $(document).ready(async function () {
   $('#nextBB').on('click', getNextAndFill);
   // $('#updateText').on('click', submitText);
   $('#previousBB').on('click', getPrevAndFill);
+  $("#downloadBoxFileButton").on("click", downloadBoxFile);
+  $('#downloadGroundTruthButton').on("click", downloadGroundTruth);
 
   await $.ajax({
     url: '../../assets/unicodeData.csv',

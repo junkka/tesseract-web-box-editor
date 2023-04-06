@@ -9,6 +9,7 @@ var boxdataIsDirty = false;
 var lineIsDirty = false;
 var unicodeData;
 
+
 class Box {
   constructor({ text, x1, y1, x2, y2, polyid, visited = false, verified = false }) {
     this.text = text
@@ -49,7 +50,7 @@ boxVisited = {
   fillOpacity: 0.3
 }
 
-
+// TODO: remove some of these globals. They are not all needed.
 var _URL = window.URL || window.webkitURL,
   h,
   w,
@@ -472,9 +473,9 @@ $(document).bind('keydown', 'ctrl+shift+up', getPrevAndFill);
 
 $('#formtxt').bind('keydown', 'ctrl+shift+down', getNextAndFill);
 $('#formtxt').bind('keydown', 'ctrl+shift+up', getPrevAndFill);
-$('#formtxt').bind('keydown', 'shift+return', getPrevAndFill);
+// $('#formtxt').bind('keydown', 'shift+return', getPrevAndFill);
 // TODO: check binding for enter key
-$('#formtxt').bind('keydown', 'shift+enter', getPrevAndFill);
+// $('#formtxt').bind('keydown', 'shift+enter', getPrevAndFill);
 // $('#formtxt').bind('keydown', 'return', submitText);
 
 $('#formtxt').on('focus', function () { $(this).select(); });
@@ -577,6 +578,7 @@ async function generateInitialBoxes(image) {
 }
 
 async function askUser(object) {
+  setPromptKeyboardControl();
   if (object.confirmText == undefined) {
     object.confirmText = 'OK';
   }
@@ -589,6 +591,8 @@ async function askUser(object) {
       // class: 'mini',
       blurring: true,
       closeIcon: true,
+      autofocus: true,
+      restoreFocus: true,
       onApprove: function () {
         resolve(true);
       },
@@ -596,6 +600,7 @@ async function askUser(object) {
         resolve(false);
       },
       onHide: function () {
+        setFormKeyboardControl();
         resolve(false);
       },
       content: object.message,
@@ -1084,6 +1089,36 @@ async function downloadGroundTruth(e) {
   downloadFile(content, fileExtension);
 }
 
+function setFormKeyboardControl(event) {
+  $(window).keydown(function (event) {
+    if (event.keyCode == 13) {
+      event.preventDefault();
+      if (event.shiftKey) {
+        getPrevAndFill();
+      } else {
+        getNextAndFill();
+      }
+      return false;
+    }
+  });
+}
+
+function setPromptKeyboardControl(event) {
+  $(window).off('keydown');
+  // $("#formtxt").blur();
+  // $(window).keydown(function (event) {
+  //   if (event.keyCode == 13) {
+  //     event.preventDefault();
+  //     if (event.shiftKey) {
+  //       getPrevAndFill();
+  //     } else {
+  //       getNextAndFill();
+  //     }
+  //     return false;
+  //   }
+  // });
+}
+
 
 $(document).ready(async function () {
   $('#formtxt').on('input', function () {
@@ -1097,17 +1132,7 @@ $(document).ready(async function () {
     .popup({
       inline: true
     });
-  $(window).keydown(function (event) {
-    if (event.keyCode == 13) {
-      event.preventDefault();
-      if (event.shiftKey) {
-        getPrevAndFill();
-      } else {
-        getNextAndFill();
-      }
-      return false;
-    }
-  });
+  setFormKeyboardControl();
 
   // on #formtxt focus apply class to #myInputBackground
   $('#formtxt').focus(function () {

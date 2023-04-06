@@ -500,6 +500,7 @@ async function generateInitialBoxes(image) {
 
   // Set #main-edit-area loading status
   setMainLoadingStatus(false);
+  setButtonsEnabledState(true);
   numberOFBoxes = boxdata.length;
   // displayMessage({ message: 'Generated ' + numberOFBoxes + ' boxes.', type: 'success' });
 
@@ -690,8 +691,9 @@ async function loadImageFile(e) {
       });
       result = await generateInitialBoxes(img)
       boxdataIsDirty = false;
-      setButtonsEnabledState(true);
       updateProgressBar({ type: 'tagging' });
+      // focus text input
+      $('#formtxt').focus();
 
       // console.log(this.width + " " + this.height);
       h = this.height
@@ -730,8 +732,6 @@ async function loadImageFile(e) {
     updateDownloadButtonsLabels({ boxDownloadButton: imageFileName + '.box', groundTruthDownloadButton: imageFileName + '.gt.txt' });
     // TODO: fix issue with text input not being focused after loading image
 
-    // focus text input
-    $('#formtxt').focus();
   }
 }
 

@@ -32,6 +32,28 @@ class Box {
         this.verified = verified
         this.modified = false
     }
+    static compare(a, b) {
+        var tolerance = 100;
+        var aCenterX = (a.x1 + a.x2) / 2;
+        var aCenterY = (a.y1 + a.y2) / 2;
+        var bCenterX = (b.x1 + b.x2) / 2;
+        var bCenterY = (b.y1 + b.y2) / 2;
+        // check if at least one center is within the horizontal distance of the other box
+        if ((aCenterX > b.x1 - tolerance && aCenterX < b.x2 + tolerance) || (bCenterX > a.x1 - tolerance && bCenterX < a.x2 + tolerance)) {
+            // console.log("boxes " + a.text + " and " + b.text + " vertically aligned");
+            if (bCenterY - aCenterY < 0) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
+        // console.log("boxes " + a.text + " and " + b.text + " are not close to each other");
+        if (aCenterX - bCenterX < 0) {
+            return -1;
+        } else {
+            return 1;
+        }
+    }
     // compare function for .equals
     equals(other) {
         return this.text == other.text && this.x1 == other.x1 && this.y1 == other.y1 && this.x2 == other.x2 && this.y2 == other.y2
@@ -250,6 +272,7 @@ function processFile(e) {
 
 
         $('#formrow').removeClass('hidden');
+        sortAllBoxes();
         // select next BB
         var nextBB = getNextBB();
         fillAndFocusRect(nextBB);
@@ -764,14 +787,15 @@ function updateDownloadButtonsLabels(options = {}) {
     }
 }
 
-// Sort boxes from top to bottom
-function sortBoxes(a, b) {
-    return b.y1 - a.y1;
-}
-
 // Sort all bosees from top to bottom
 function sortAllBoxes() {
     boxdata.sort(sortBoxes);
+    // boxdata.sort(sortBoxes);
+    // repead three times to make sure that the boxes are sorted correctly
+    // I don't know why this is necessary, but it is 🤷‍♂️
+    boxdata.sort(Box.compare);
+    boxdata.sort(Box.compare);
+    boxdata.sort(Box.compare);
 }
 
 // Define regular expressions

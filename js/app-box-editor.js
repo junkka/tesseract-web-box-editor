@@ -122,6 +122,7 @@ function setFromData(d) {
     updateBackground();
     lineIsDirty = false;
     updateProgressBar({ type: 'tagging' });
+    $('#updateTxt').popup('hide');
 }
 
 function getPrevtBB(box) {
@@ -1215,6 +1216,10 @@ function showCharInfoPopup(e) { // prevent modifier keys from triggering popup
     if (e.ctrlKey || e.altKey || e.metaKey) {
         return;
     }
+    if (e.keyCode == 13) {
+        $('#updateTxt').popup('hide');
+        return;
+    }
     var selection;
 
     if (window.getSelection) {
@@ -1231,7 +1236,7 @@ function showCharInfoPopup(e) { // prevent modifier keys from triggering popup
     }
     results = getUnicodeInfo(selection.toString());
     // TODO: replace max length with a programmatic solution
-    if (results.length == 0 || results.length > 20) {
+    if (results.length == 0 || results.length > 15) {
         $('#updateTxt').popup('hide');
         return;
     } else {

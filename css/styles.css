@@ -10,6 +10,19 @@
   left: 62.5%;
 }
 
+/* // apply style to popup
+// max-height: 40em;overflow: scroll;
+$('#updateTxt').popup('get popup').css('max-height', '40em');
+$('#updateTxt').popup('get popup').css('overflow', 'scroll');
+$('#updateTxt').popup('get popup').css('scrollbar-width', 'none');
+$('#updateTxt').popup('get popup').css('scrollbar-width', 'none');
+$('#updateTxt').popup('get popup').css('-ms-overflow-style', 'none');
+// apply popup scrollbar for webkit
+$('#updateTxt').popup('get popup').css('scrollbar-width', 'none'); */
+.ui.popup::-webkit-scrollbar {
+  display: none;
+}
+
 .mapalt {
   height: 580px;
   border: 2px solid gray;

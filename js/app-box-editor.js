@@ -1158,7 +1158,7 @@ function downloadFile(content, fileExtension) {
 }
 
 function showCharInfoPopup(e) { // prevent modifier keys from triggering popup
-    if (e.ctrlKey || e.altKey || e.metaKey) {
+    if (e.ctrlKey || e.altKey || e.metaKey || e.keyCode == 13) {
         return;
     }
     var selection;
@@ -1177,11 +1177,20 @@ function showCharInfoPopup(e) { // prevent modifier keys from triggering popup
     }
     results = getUnicodeInfo(selection.toString());
     // TODO: replace max length with a programmatic solution
-    if (results.length == 0 || results.length > 20) {
+    if (results.length == 0 || results.length > 200) {
         $('#updateTxt').popup('hide');
         return;
     } else {
         formatted = formatForPopup(results);
+        // apply style to popup
+        // max-height: 40em;overflow: scroll;
+        $('#updateTxt').popup('get popup').css('max-height', '20em');
+        $('#updateTxt').popup('get popup').css('overflow', 'scroll');
+        $('#updateTxt').popup('get popup').css('scrollbar-width','none');
+        $('#updateTxt').popup('get popup').css('scrollbar-width','none');
+        $('#updateTxt').popup('get popup').css('-ms-overflow-style', 'none');
+        // apply popup scrollbar for webkit
+        $('#updateTxt').popup('get popup').css('scrollbar-width','none');
 
         if ($('#updateTxt').popup('is visible')) {
             $('#updateTxt').popup('change content (html)', formatted)

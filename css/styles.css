@@ -65,6 +65,10 @@
   color: transparent;
 }
 
+.no-kerning {
+  font-kerning: none;
+}
+
 div.ui.mini.red.empty.circular.label {
   background: linear-gradient(to bottom, #e66a6a 50%, #db2828 50%);
   border-radius: 7000;

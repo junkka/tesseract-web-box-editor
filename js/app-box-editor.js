@@ -1053,8 +1053,23 @@ function setPromptKeyboardControl(event) {
     $(window).off('keydown');
 }
 
+// set kerning on or off
+const setKerning = (elements, kerning) => {
+    for (const element of elements) {
+        if (kerning) {
+            element.classList.remove('no-kerning');
+        } else {
+            element.classList.add('no-kerning');
+        }
+    }
+};
 
 $(document).ready(async function () {
+    colorizedFields = [];
+    colorizedFields.push($('#myInputBackground')[0]);
+    colorizedFields.push($('#formtxt')[0]);
+    setKerning(colorizedFields, false);
+
     $('#formtxt').on('input', function () {
         updateBackground();
         setLineIsDirty();

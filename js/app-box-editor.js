@@ -814,6 +814,13 @@ async function colorize(text) {
     for (var i = 0; i < text.length; i++) {
         var isCapital = false;
         var char = text.charAt(i);
+        // if character name contains COMBINING
+        var charName = getUnicodeInfo(char)[0].name;
+        if (charName.includes('COMBINING')) {
+            // add to previous span
+            current_span += char;
+            continue;
+        }
         if (char != char.toLowerCase()) {
             isCapital = true;
         }

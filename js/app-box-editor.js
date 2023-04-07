@@ -291,6 +291,7 @@ async function editRect(e) {
         x2: Math.round(layer._latlngs[0][2].lng),
         y2: Math.round(layer._latlngs[0][2].lat)
     })
+    var lineWasDirty = lineIsDirty;
     await updateBoxdata(layer._leaflet_id, newd);
 
     // new dimensions
@@ -298,6 +299,9 @@ async function editRect(e) {
     console.log("moved box ", [
         box.polyid, box.text
     ], " from ", oldDimenstions, " to ", newDimenstions);
+    if (lineWasDirty) {
+        newd.text = $('#formtxt').val();
+    }
     fillAndFocusRect(newd);
 }
 
@@ -313,16 +317,18 @@ function deleteBox(box) {
 
 function onRectClick(event) {
     var rect = event.target;
+    // get boxdatata
+    if (selectedPoly != rect) {
+        var bb = getBoxdataFromRect(rect);
+        setFromData(bb);
+    }
     removeStyle(selectedPoly)
+
     focusRectangle(rect)
     setStyle(rect)
     disableEdit(rect);
     enableEdit(rect);
 
-    // get boxdatata
-    var bb = getBoxdataFromRect(rect);
-
-    setFromData(bb);
 }
 
 function updateRect(polyid, d) {

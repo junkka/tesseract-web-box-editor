@@ -118,6 +118,7 @@ function setFromData(d) {
     $("#x2").val(d.x2);
     $("#y2").val(d.y2);
     $('#formtxt').focus();
+    $('#formtxt').select();
     updateBackground();
     lineIsDirty = false;
     updateProgressBar({ type: 'tagging' });
@@ -185,6 +186,7 @@ function focusBoxID(id, modified = false) {
     var rect = boxlayer.getLayer(id);
     focusRectangle(rect)
     $('#formtxt').focus();
+    $('#formtxt').select();
 }
 
 
@@ -727,6 +729,7 @@ async function loadImageFile(e) {
             boxdataIsDirty = false;
             updateProgressBar({ type: 'tagging' });
             $('#formtxt').focus();
+            $('#formtxt').select();
 
             h = this.height
             w = this.width

@@ -65,6 +65,19 @@
   color: transparent;
 }
 
+/* keep selected text in #formtxt transparent */
+/* webkit browsers */
+#formtxt::selection {
+  color: transparent;
+  background: #65656533;
+  /* mix-blend-mode: exclusion; */
+}
+/* getko brosers */
+#formtxt::-moz-selection {
+  color: transparent;
+  background: #65656533;
+}
+
 .no-kerning {
   font-kerning: none;
 }

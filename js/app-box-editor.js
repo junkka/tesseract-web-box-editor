@@ -92,7 +92,7 @@ var _URL = window.URL || window.webkitURL,
     imageLoaded = false,
     boxdataLoaded = false,
     selectedBox,
-    zoomMax = 2,
+    zoomMax = 1,
     image;
 
 function getBoxFileType(boxContent) {
@@ -173,10 +173,12 @@ function removeStyle(rect, modified = false) {
 
 function focusRectangle(rect) {
     disableEdit(rect);
-    map.fitBounds(rect.getBounds(), {
+    map.flyToBounds(rect.getBounds(), {
         maxZoom: zoomMax,
         animate: true,
-        padding: [10, 10]
+        paddingBottomRight: [40, 0],
+        duration: .25,
+        easeLinearity: 0.25
     });
     selectedPoly = rect
     setStyle(rect)
@@ -484,14 +486,20 @@ async function generateInitialBoxes(image) {
     // await worker.loadLanguage('LATCYR_from_Cyrillic');
     // await worker.initialize('LATCYR_from_Cyrillic');
     await worker.loadLanguage(['osd', 'LATCYR_from_Cyrillic']);
-    await worker.initialize('LATCYR_from_Cyrillic');
+    await worker.initialize(['osd', 'LATCYR_from_Cyrillic']);
     // TODO: 06/04/2023 Continue setting parameters to discover columns and not assume single block.
     await worker.setParameters({
         // tessedit_ocr_engine_mode: OcrEngineMode.OEM_LSTM_ONLY,
         // tessedit_ocr_engine_mode: "OcrEngineMode.OEM_LSTM_ONLY",
-        tessedit_pageseg_mode: "PSM_AUTO_OSD"
+        // tessedit_pageseg_mode: "PSM_AUTO_OSD"
+        tessedit_ocr_engine_mode: 1,
+        tessedit_pageseg_mode: 12
     });
-    const results = await worker.recognize(image);
+    // const results = await worker.recognize(image, { left: image.width, top: image.height, width: 10, height: 10 });
+    // run worker on half of the image
+    const rectangle = { left: 0, top: 0, width: image.width / 2, height: image.height }
+    const results = await worker.recognize(image, { rectangle });
+    // await worker.terminate();
 
     // get bounding boxes from results.data.lines
     var lines = results.data.lines;
@@ -730,11 +738,6 @@ async function loadImageFile(e) {
             map.eachLayer(function (layer) {
                 map.removeLayer(layer);
             });
-            result = await generateInitialBoxes(img)
-            boxdataIsDirty = false;
-            updateProgressBar({ type: 'tagging' });
-            $('#formtxt').focus();
-            $('#formtxt').select();
 
             h = this.height
             w = this.width
@@ -755,19 +758,26 @@ async function loadImageFile(e) {
                     h, w
                 ]
             ]
-
+            imageOverlayOptions = {
+                opacity: 0.25
+            }
             if (image) {
                 $(image._image).fadeOut(250, function () {
                     map.removeLayer(image);
-                    map.fitBounds(bounds2);
-                    image = new L.imageOverlay(img.src, bounds).addTo(map);
-                    $(image._image).fadeIn(500);
+                    map.fitBounds(bounds2,);
+                    image = new L.imageOverlay(img.src, bounds, imageOverlayOptions).addTo(map);
+                    $(image._image).fadeIn(750);
                 });
             } else {
-                map.fitBounds(bounds2);
-                image = new L.imageOverlay(img.src, bounds).addTo(map);
-                $(image._image).fadeIn(500);
-            } map.fitBounds(bounds2);
+                map.fitBounds(bounds2,
+                    {
+                        // no easing
+                        duration: 2,
+                        easeLinearity: .25
+                    });
+                image = new L.imageOverlay(img.src, bounds, imageOverlayOptions).addTo(map);
+                $(image._image).fadeIn(750);
+            }
         };
         img.onerror = function () {
             var ext = file.name.split('.').pop();
@@ -783,6 +793,13 @@ async function loadImageFile(e) {
             boxDownloadButton: imageFileName + '.box',
             groundTruthDownloadButton: imageFileName + '.gt.txt'
         });
+        result = await generateInitialBoxes(img)
+        boxdataIsDirty = false;
+        updateProgressBar({ type: 'tagging' });
+        $('#formtxt').focus();
+        $('#formtxt').select();
+        // fade image opacity back to 1 during 500ms
+        $(image._image).animate({ opacity: 1 }, 500);
     }
 }
 
@@ -1131,7 +1148,7 @@ $(document).ready(async function () {
         drawControl: false,
         attributionControl: false,
         preferCanvas: true,
-        maxBoundsViscosity: .5
+        maxBoundsViscosity: .5,
     });
 
     map.addControl(zoomControl);

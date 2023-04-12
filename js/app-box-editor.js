@@ -983,6 +983,28 @@ L.Control.Region = L.Control.extend({
         L.DomEvent.disableClickPropagation(inclusiveRegion);
         L.DomEvent.on(inclusiveRegion, 'click', function () {
             console.log('click');
+            // Get bounds of image from map
+            var imageBounds = map.getBounds();
+            // get image height and width
+            var imageHeight = imageBounds.getNorth() - imageBounds.getSouth();
+            var imageWidth = imageBounds.getEast() - imageBounds.getWest();
+            // get aspect ratio of image
+            var imageAspectRatio = imageBounds.getEast() - imageBounds.getWest();
+            imageAspectRatio = imageAspectRatio / (imageBounds.getNorth() - imageBounds.getSouth());
+            // increase height of #mapid to fit aspect ratio. use smooth animation
+            var mapHeight = $('#mapid').height();
+            var mapWidth = $('#mapid').width();
+            var mapAspectRatio = mapWidth / mapHeight;
+            console.log(imageAspectRatio, mapAspectRatio);
+            if (imageAspectRatio > .5) {
+                var newHeight = mapWidth * imageAspectRatio;
+                var newHeight = imageHeight;
+                $('#mapid').animate({ height: newHeight }, 500);
+            }
+
+            // set map bounds
+            map.fitBounds(imageBounds);
+
         });
 
         container.title = "Title";

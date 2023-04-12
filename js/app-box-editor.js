@@ -307,7 +307,7 @@ async function editRect(e) {
     if (lineWasDirty) {
         newd.text = $('#formtxt').val();
     }
-    fillAndFocusRect(newd);
+    // fillAndFocusRect(newd);
 }
 
 function deleteBox(box) {
@@ -321,6 +321,11 @@ function deleteBox(box) {
 }
 
 function onRectClick(event) {
+    console.log(event.target.editing);
+    // if editing is enabled, do nothing
+    if (event.target.editing.enabled) {
+        return;
+    }
     var rect = event.target;
     // get boxdatata
     if (selectedPoly != rect) {
@@ -762,19 +767,14 @@ async function loadImageFile(e) {
                 opacity: 0.25
             }
             if (image) {
-                $(image._image).fadeOut(250, function () {
+                $(image._image).fadeOut(750, function () {
                     map.removeLayer(image);
-                    map.fitBounds(bounds2,);
+                    // map.fitBounds(bounds2,);
                     image = new L.imageOverlay(img.src, bounds, imageOverlayOptions).addTo(map);
-                    $(image._image).fadeIn(750);
+                    $(image._image).fadeIn(500);
                 });
             } else {
-                map.fitBounds(bounds2,
-                    {
-                        // no easing
-                        duration: 2,
-                        easeLinearity: .25
-                    });
+                map.fitBounds(bounds2);
                 image = new L.imageOverlay(img.src, bounds, imageOverlayOptions).addTo(map);
                 $(image._image).fadeIn(750);
             }

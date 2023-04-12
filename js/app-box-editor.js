@@ -118,9 +118,11 @@ function setFromData(d) {
     $("#x2").val(d.x2);
     $("#y2").val(d.y2);
     $('#formtxt').focus();
+    $('#formtxt').select();
     updateBackground();
     lineIsDirty = false;
     updateProgressBar({ type: 'tagging' });
+    $('#updateTxt').popup('hide');
 }
 
 function getPrevtBB(box) {
@@ -185,6 +187,7 @@ function focusBoxID(id, modified = false) {
     var rect = boxlayer.getLayer(id);
     focusRectangle(rect)
     $('#formtxt').focus();
+    $('#formtxt').select();
 }
 
 
@@ -291,6 +294,7 @@ async function editRect(e) {
         x2: Math.round(layer._latlngs[0][2].lng),
         y2: Math.round(layer._latlngs[0][2].lat)
     })
+    var lineWasDirty = lineIsDirty;
     await updateBoxdata(layer._leaflet_id, newd);
 
     // new dimensions
@@ -298,6 +302,9 @@ async function editRect(e) {
     console.log("moved box ", [
         box.polyid, box.text
     ], " from ", oldDimenstions, " to ", newDimenstions);
+    if (lineWasDirty) {
+        newd.text = $('#formtxt').val();
+    }
     fillAndFocusRect(newd);
 }
 
@@ -313,16 +320,18 @@ function deleteBox(box) {
 
 function onRectClick(event) {
     var rect = event.target;
+    // get boxdatata
+    if (selectedPoly != rect) {
+        var bb = getBoxdataFromRect(rect);
+        setFromData(bb);
+    }
     removeStyle(selectedPoly)
+
     focusRectangle(rect)
     setStyle(rect)
     disableEdit(rect);
     enableEdit(rect);
 
-    // get boxdatata
-    var bb = getBoxdataFromRect(rect);
-
-    setFromData(bb);
 }
 
 function updateRect(polyid, d) {
@@ -725,6 +734,7 @@ async function loadImageFile(e) {
             boxdataIsDirty = false;
             updateProgressBar({ type: 'tagging' });
             $('#formtxt').focus();
+            $('#formtxt').select();
 
             h = this.height
             w = this.width
@@ -791,40 +801,6 @@ function updateDownloadButtonsLabels(options = {}) {
     }
 }
 
-// Sort boxes from top to bottom
-// function sortBoxes(a, b) {
-//     return b.y1 - a.y1;
-// }
-
-// function sortBoxes(a, b) {
-//     // make a cluster of boxes that are close to each other
-//     // if the boxes are close to each other, then sort them from top to bottom
-//     // if the boxes are not close to each other, then sort them from left to right
-//     // var verticalDistance = 50;
-//     // var horizontalDistance = 50;
-//     // var clusterDistance = 150;
-//     var tolerance = 100;
-//     var aCenterX = (a.x1 + a.x2) / 2;
-//     var aCenterY = (a.y1 + a.y2) / 2;
-//     var bCenterX = (b.x1 + b.x2) / 2;
-//     var bCenterY = (b.y1 + b.y2) / 2;
-//     // check if at least one center is within the horizontal distance of the other box
-//     if ((aCenterX > b.x1 - tolerance && aCenterX < b.x2 + tolerance) || (bCenterX > a.x1 - tolerance && bCenterX < a.x2 + tolerance)) {
-//         // // make cluster distance a function of the size of the boxes
-//         // horizontalDistance = Math.max(Math.abs(a.x1 - a.x2), Math.abs(b.x1 - b.x2))/2;
-//         // verticalDistance = Math.max(Math.abs(a.y1 - a.y2), Math.abs(b.y1 - b.y2))*2;
-//         // if (Math.abs(aCenterX - bCenterX) < clusterDistance && Math.abs(aCenterY - bCenterY) < clusterDistance) {
-//         // if (Math.abs(aCenterY - bCenterY) < verticalDistance) {
-//         // if (Math.abs(aCenterX - bCenterX) < horizontalDistance && Math.abs(aCenterY - bCenterY) < verticalDistance) {
-//         // console.log("boxes " + a.text + " and " + b.text + " vertically aligned");
-//         return bCenterY - aCenterY;
-//         // }
-//     }
-//     // console.log("boxes " + a.text + " and " + b.text + " are not close to each other");
-//     return aCenterX - bCenterX;
-// }
-
-
 // Sort all bosees from top to bottom
 function sortAllBoxes() {
     // boxdata.sort(sortBoxes);
@@ -852,6 +828,13 @@ async function colorize(text) {
     for (var i = 0; i < text.length; i++) {
         var isCapital = false;
         var char = text.charAt(i);
+        // if character name contains COMBINING
+        var charName = getUnicodeInfo(char)[0].name;
+        if (charName.includes('COMBINING')) {
+            // add to previous span
+            current_span += char;
+            continue;
+        }
         if (char != char.toLowerCase()) {
             isCapital = true;
         }
@@ -1084,8 +1067,23 @@ function setPromptKeyboardControl(event) {
     $(window).off('keydown');
 }
 
+// set kerning on or off
+const setKerning = (elements, kerning) => {
+    for (const element of elements) {
+        if (kerning) {
+            element.classList.remove('no-kerning');
+        } else {
+            element.classList.add('no-kerning');
+        }
+    }
+};
 
 $(document).ready(async function () {
+    colorizedFields = [];
+    colorizedFields.push($('#myInputBackground')[0]);
+    colorizedFields.push($('#formtxt')[0]);
+    setKerning(colorizedFields, false);
+
     $('#formtxt').on('input', function () {
         updateBackground();
         setLineIsDirty();
@@ -1222,6 +1220,10 @@ function showCharInfoPopup(e) { // prevent modifier keys from triggering popup
     if (e.ctrlKey || e.altKey || e.metaKey) {
         return;
     }
+    if (e.keyCode == 13) {
+        $('#updateTxt').popup('hide');
+        return;
+    }
     var selection;
 
     if (window.getSelection) {
@@ -1238,7 +1240,7 @@ function showCharInfoPopup(e) { // prevent modifier keys from triggering popup
     }
     results = getUnicodeInfo(selection.toString());
     // TODO: replace max length with a programmatic solution
-    if (results.length == 0 || results.length > 20) {
+    if (results.length == 0 || results.length > 15) {
         $('#updateTxt').popup('hide');
         return;
     } else {

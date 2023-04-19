@@ -969,110 +969,110 @@ var drawControl = new L.Control.Draw({
     }
 });
 
-L.Control.Region = L.Control.extend({
-    options: {
-        position: 'topright'
-    },
-    onAdd: function (map) {
-        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-        var section = L.DomUtil.create('div', 'leaflet-draw-section', container);
-        // var toolbar = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar leaflet-draw-toolbar-top', section);
-        var inclusiveRegion = L.DomUtil.create('a', 'leaflet-control-button', section);
-        inclusiveRegion.innerHTML = '<i class="large grey fitted plus circle icon"></i>';
-        var exclusiveRegion = L.DomUtil.create('a', 'leaflet-control-button', section);
-        exclusiveRegion.innerHTML = '<i class="large grey fitted minus circle icon"></i>';
-        L.DomEvent.disableClickPropagation(inclusiveRegion);
-        L.DomEvent.on(inclusiveRegion, 'click', function () {
-            console.log('click');
-            // Get bounds of image from map
-            var imageBounds = map.getBounds();
-            // get image height and width
-            var imageHeight = imageBounds.getNorth() - imageBounds.getSouth();
-            var imageWidth = imageBounds.getEast() - imageBounds.getWest();
-            // get aspect ratio of image
-            var imageAspectRatio = imageBounds.getEast() - imageBounds.getWest();
-            imageAspectRatio = imageAspectRatio / (imageBounds.getNorth() - imageBounds.getSouth());
-            // increase height of #mapid to fit aspect ratio. use smooth animation
-            var mapHeight = $('#mapid').height();
-            var mapWidth = $('#mapid').width();
-            var mapAspectRatio = mapWidth / mapHeight;
-            console.log(imageAspectRatio, mapAspectRatio);
-            if (imageAspectRatio > .5) {
-                var newHeight = mapWidth * imageAspectRatio;
-                var newHeight = imageHeight;
-                $('#mapid').animate({ height: newHeight }, 500);
-            }
+// L.Control.Region = L.Control.extend({
+//     options: {
+//         position: 'topright'
+//     },
+//     onAdd: function (map) {
+//         var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+//         var section = L.DomUtil.create('div', 'leaflet-draw-section', container);
+//         // var toolbar = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar leaflet-draw-toolbar-top', section);
+//         var inclusiveRegion = L.DomUtil.create('a', 'leaflet-control-button', section);
+//         inclusiveRegion.innerHTML = '<i class="large grey fitted plus circle icon"></i>';
+//         var exclusiveRegion = L.DomUtil.create('a', 'leaflet-control-button', section);
+//         exclusiveRegion.innerHTML = '<i class="large grey fitted minus circle icon"></i>';
+//         L.DomEvent.disableClickPropagation(inclusiveRegion);
+//         L.DomEvent.on(inclusiveRegion, 'click', function () {
+//             console.log('click');
+//             // Get bounds of image from map
+//             var imageBounds = map.getBounds();
+//             // get image height and width
+//             var imageHeight = imageBounds.getNorth() - imageBounds.getSouth();
+//             var imageWidth = imageBounds.getEast() - imageBounds.getWest();
+//             // get aspect ratio of image
+//             var imageAspectRatio = imageBounds.getEast() - imageBounds.getWest();
+//             imageAspectRatio = imageAspectRatio / (imageBounds.getNorth() - imageBounds.getSouth());
+//             // increase height of #mapid to fit aspect ratio. use smooth animation
+//             var mapHeight = $('#mapid').height();
+//             var mapWidth = $('#mapid').width();
+//             var mapAspectRatio = mapWidth / mapHeight;
+//             console.log(imageAspectRatio, mapAspectRatio);
+//             if (imageAspectRatio > .5) {
+//                 var newHeight = mapWidth * imageAspectRatio;
+//                 var newHeight = imageHeight;
+//                 $('#mapid').animate({ height: newHeight }, 500);
+//             }
 
-            // set map bounds
-            map.fitBounds(imageBounds);
+//             // set map bounds
+//             map.fitBounds(imageBounds);
 
-        });
+//         });
 
-        container.title = "Title";
+//         container.title = "Title";
 
-        return container;
-    },
-    onRemove: function (map) { },
-});
+//         return container;
+//     },
+//     onRemove: function (map) { },
+// });
 
-L.Draw.AddRegion = L.Draw.Polygon.extend({
-    statics: {
-        TYPE: "addregion"
-    },
-    Poly: L.AddRegion,
-    options: {
-        showArea: !1,
-        showLength: !1,
-        shapeOptions: {
-            stroke: !0,
-            color: "#3388ff",
-            weight: 4,
-            opacity: .5,
-            fill: !0,
-            fillColor: null,
-            fillOpacity: .2,
-            clickable: !0
-        },
-        metric: !0,
-        feet: !0,
-        nautic: !1,
-        precision: {}
-    },
-    initialize: function (t, e) {
-        L.Draw.Polyline.prototype.initialize.call(this, t, e),
-            this.type = L.Draw.Polygon.TYPE
-    },
-    _updateFinishHandler: function () {
-        var t = this._markers.length;
-        1 === t && this._markers[0].on("click", this._finishShape, this),
-            t > 2 && (this._markers[t - 1].on("dblclick", this._finishShape, this), t > 3 && this._markers[t - 2].off("dblclick", this._finishShape, this))
-    },
-    _getTooltipText: function () {
-        var t,
-            e;
-        return 0 === this._markers.length ? t = L.drawLocal.draw.handlers.polygon.tooltip.start : this._markers.length < 3 ? (t = L.drawLocal.draw.handlers.polygon.tooltip.cont, e = this._getMeasurementString()) : (t = L.drawLocal.draw.handlers.polygon.tooltip.end, e = this._getMeasurementString()), {
-            text: t,
-            subtext: e
-        }
-    },
-    _getMeasurementString: function () {
-        var t = this._area,
-            e = "";
-        return t || this.options.showLength ? (this.options.showLength && (e = L.Draw.Polyline.prototype._getMeasurementString.call(this)), t && (e += "<br>" + L.GeometryUtil.readableArea(t, this.options.metric, this.options.precision)), e) : null
-    },
-    _shapeIsValid: function () {
-        return this._markers.length >= 3
-    },
-    _vertexChanged: function (t, e) {
-        var i;
-        !this.options.allowIntersection && this.options.showArea && (i = this._poly.getLatLngs(), this._area = L.GeometryUtil.geodesicArea(i)),
-            L.Draw.Polyline.prototype._vertexChanged.call(this, t, e)
-    },
-    _cleanUpShape: function () {
-        var t = this._markers.length;
-        t > 0 && (this._markers[0].off("click", this._finishShape, this), t > 2 && this._markers[t - 1].off("dblclick", this._finishShape, this))
-    }
-}),
+// L.Draw.AddRegion = L.Draw.Polygon.extend({
+//     statics: {
+//         TYPE: "addregion"
+//     },
+//     Poly: L.AddRegion,
+//     options: {
+//         showArea: !1,
+//         showLength: !1,
+//         shapeOptions: {
+//             stroke: !0,
+//             color: "#3388ff",
+//             weight: 4,
+//             opacity: .5,
+//             fill: !0,
+//             fillColor: null,
+//             fillOpacity: .2,
+//             clickable: !0
+//         },
+//         metric: !0,
+//         feet: !0,
+//         nautic: !1,
+//         precision: {}
+//     },
+//     initialize: function (t, e) {
+//         L.Draw.Polyline.prototype.initialize.call(this, t, e),
+//             this.type = L.Draw.Polygon.TYPE
+//     },
+//     _updateFinishHandler: function () {
+//         var t = this._markers.length;
+//         1 === t && this._markers[0].on("click", this._finishShape, this),
+//             t > 2 && (this._markers[t - 1].on("dblclick", this._finishShape, this), t > 3 && this._markers[t - 2].off("dblclick", this._finishShape, this))
+//     },
+//     _getTooltipText: function () {
+//         var t,
+//             e;
+//         return 0 === this._markers.length ? t = L.drawLocal.draw.handlers.polygon.tooltip.start : this._markers.length < 3 ? (t = L.drawLocal.draw.handlers.polygon.tooltip.cont, e = this._getMeasurementString()) : (t = L.drawLocal.draw.handlers.polygon.tooltip.end, e = this._getMeasurementString()), {
+//             text: t,
+//             subtext: e
+//         }
+//     },
+//     _getMeasurementString: function () {
+//         var t = this._area,
+//             e = "";
+//         return t || this.options.showLength ? (this.options.showLength && (e = L.Draw.Polyline.prototype._getMeasurementString.call(this)), t && (e += "<br>" + L.GeometryUtil.readableArea(t, this.options.metric, this.options.precision)), e) : null
+//     },
+//     _shapeIsValid: function () {
+//         return this._markers.length >= 3
+//     },
+//     _vertexChanged: function (t, e) {
+//         var i;
+//         !this.options.allowIntersection && this.options.showArea && (i = this._poly.getLatLngs(), this._area = L.GeometryUtil.geodesicArea(i)),
+//             L.Draw.Polyline.prototype._vertexChanged.call(this, t, e)
+//     },
+//     _cleanUpShape: function () {
+//         var t = this._markers.length;
+//         t > 0 && (this._markers[0].off("click", this._finishShape, this), t > 2 && this._markers[t - 1].off("dblclick", this._finishShape, this))
+//     }
+// }),
 
 // L.Draw.Region = L.Draw.Rectangle.extend({
 //     statics: {
@@ -1421,8 +1421,8 @@ $(document).ready(async function () {
     });
 
     map.addControl(zoomControl);
-    var control = new L.Control.Region()
-    control.addTo(map);
+    // var control = new L.Control.Region()
+    // control.addTo(map);
     map.addControl(drawControl);
 
     $('#boxFile').change(loadBoxFile);

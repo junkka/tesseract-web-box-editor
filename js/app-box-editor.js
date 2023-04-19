@@ -324,7 +324,7 @@ function deleteBox(box) {
 function onRectClick(event) {
     console.log(event.target.editing);
     // if editing is enabled, do nothing
-    if (event.target.editing.enabled) {
+    if (event.target.editing.enabled()) {
         return;
     }
     var rect = event.target;

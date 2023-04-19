@@ -504,7 +504,8 @@ async function generateInitialBoxes(image) {
     // const results = await worker.recognize(image, { left: image.width, top: image.height, width: 10, height: 10 });
     // run worker on half of the image
     const rectangle = { left: 0, top: 0, width: image.width / 2, height: image.height }
-    const results = await worker.recognize(image, { rectangle });
+    const results = await worker.recognize(image);
+    // const results = await worker.recognize(image, { rectangle });
     // await worker.terminate();
 
     // get bounding boxes from results.data.lines

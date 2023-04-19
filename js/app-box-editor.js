@@ -88,11 +88,12 @@ var _URL = window.URL || window.webkitURL,
     boxdata = [],
     boxFileType = BoxFileType.WORDSTR,
     boxlayer = new L.FeatureGroup(),
+    regionlayer = new L.FeatureGroup(),
     selectedPoly,
     imageLoaded = false,
     boxdataLoaded = false,
     selectedBox,
-    zoomMax = 2,
+    zoomMax = 1,
     image;
 
 function getBoxFileType(boxContent) {
@@ -173,10 +174,12 @@ function removeStyle(rect, modified = false) {
 
 function focusRectangle(rect) {
     disableEdit(rect);
-    map.fitBounds(rect.getBounds(), {
+    map.flyToBounds(rect.getBounds(), {
         maxZoom: zoomMax,
         animate: true,
-        padding: [10, 10]
+        paddingBottomRight: [40, 0],
+        duration: .25,
+        easeLinearity: 0.25
     });
     selectedPoly = rect
     setStyle(rect)
@@ -305,7 +308,7 @@ async function editRect(e) {
     if (lineWasDirty) {
         newd.text = $('#formtxt').val();
     }
-    fillAndFocusRect(newd);
+    // fillAndFocusRect(newd);
 }
 
 function deleteBox(box) {
@@ -319,6 +322,11 @@ function deleteBox(box) {
 }
 
 function onRectClick(event) {
+    console.log(event.target.editing);
+    // if editing is enabled, do nothing
+    if (event.target.editing.enabled()) {
+        return;
+    }
     var rect = event.target;
     // get boxdatata
     if (selectedPoly != rect) {
@@ -481,13 +489,24 @@ async function generateInitialBoxes(image) {
         gzip: false,
         logger: m => processWorkerLogMessage(m)
     });
-    await worker.loadLanguage('LATCYR_from_Cyrillic');
-    await worker.initialize('LATCYR_from_Cyrillic');
-    // await worker.setParameters({
-    // tessedit_ocr_engine_mode: OcrEngineMode.OEM_LSTM_ONLY,
-    // tessedit_pageseg_mode: PSM_AUTO_OSD
-    // });
+    // await worker.loadLanguage('LATCYR_from_Cyrillic');
+    // await worker.initialize('LATCYR_from_Cyrillic');
+    await worker.loadLanguage(['osd', 'LATCYR_from_Cyrillic']);
+    await worker.initialize(['osd', 'LATCYR_from_Cyrillic']);
+    // TODO: 06/04/2023 Continue setting parameters to discover columns and not assume single block.
+    await worker.setParameters({
+        // tessedit_ocr_engine_mode: OcrEngineMode.OEM_LSTM_ONLY,
+        // tessedit_ocr_engine_mode: "OcrEngineMode.OEM_LSTM_ONLY",
+        // tessedit_pageseg_mode: "PSM_AUTO_OSD"
+        tessedit_ocr_engine_mode: 1,
+        tessedit_pageseg_mode: 12
+    });
+    // const results = await worker.recognize(image, { left: image.width, top: image.height, width: 10, height: 10 });
+    // run worker on half of the image
+    const rectangle = { left: 0, top: 0, width: image.width / 2, height: image.height }
     const results = await worker.recognize(image);
+    // const results = await worker.recognize(image, { rectangle });
+    // await worker.terminate();
 
     // get bounding boxes from results.data.lines
     var lines = results.data.lines;
@@ -726,11 +745,6 @@ async function loadImageFile(e) {
             map.eachLayer(function (layer) {
                 map.removeLayer(layer);
             });
-            result = await generateInitialBoxes(img)
-            boxdataIsDirty = false;
-            updateProgressBar({ type: 'tagging' });
-            $('#formtxt').focus();
-            $('#formtxt').select();
 
             h = this.height
             w = this.width
@@ -751,19 +765,21 @@ async function loadImageFile(e) {
                     h, w
                 ]
             ]
-
+            imageOverlayOptions = {
+                opacity: 0.25
+            }
             if (image) {
-                $(image._image).fadeOut(250, function () {
+                $(image._image).fadeOut(750, function () {
                     map.removeLayer(image);
-                    map.fitBounds(bounds2);
-                    image = new L.imageOverlay(img.src, bounds).addTo(map);
+                    // map.fitBounds(bounds2,);
+                    image = new L.imageOverlay(img.src, bounds, imageOverlayOptions).addTo(map);
                     $(image._image).fadeIn(500);
                 });
             } else {
                 map.fitBounds(bounds2);
-                image = new L.imageOverlay(img.src, bounds).addTo(map);
-                $(image._image).fadeIn(500);
-            } map.fitBounds(bounds2);
+                image = new L.imageOverlay(img.src, bounds, imageOverlayOptions).addTo(map);
+                $(image._image).fadeIn(750);
+            }
         };
         img.onerror = function () {
             var ext = file.name.split('.').pop();
@@ -779,6 +795,13 @@ async function loadImageFile(e) {
             boxDownloadButton: imageFileName + '.box',
             groundTruthDownloadButton: imageFileName + '.gt.txt'
         });
+        result = await generateInitialBoxes(img)
+        boxdataIsDirty = false;
+        updateProgressBar({ type: 'tagging' });
+        $('#formtxt').focus();
+        $('#formtxt').select();
+        // fade image opacity back to 1 during 500ms
+        $(image._image).animate({ opacity: 1 }, 500);
     }
 }
 
@@ -945,6 +968,273 @@ var drawControl = new L.Control.Draw({
         remove: true
     }
 });
+
+// L.Control.Region = L.Control.extend({
+//     options: {
+//         position: 'topright'
+//     },
+//     onAdd: function (map) {
+//         var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+//         var section = L.DomUtil.create('div', 'leaflet-draw-section', container);
+//         // var toolbar = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar leaflet-draw-toolbar-top', section);
+//         var inclusiveRegion = L.DomUtil.create('a', 'leaflet-control-button', section);
+//         inclusiveRegion.innerHTML = '<i class="large grey fitted plus circle icon"></i>';
+//         var exclusiveRegion = L.DomUtil.create('a', 'leaflet-control-button', section);
+//         exclusiveRegion.innerHTML = '<i class="large grey fitted minus circle icon"></i>';
+//         L.DomEvent.disableClickPropagation(inclusiveRegion);
+//         L.DomEvent.on(inclusiveRegion, 'click', function () {
+//             console.log('click');
+//             // Get bounds of image from map
+//             var imageBounds = map.getBounds();
+//             // get image height and width
+//             var imageHeight = imageBounds.getNorth() - imageBounds.getSouth();
+//             var imageWidth = imageBounds.getEast() - imageBounds.getWest();
+//             // get aspect ratio of image
+//             var imageAspectRatio = imageBounds.getEast() - imageBounds.getWest();
+//             imageAspectRatio = imageAspectRatio / (imageBounds.getNorth() - imageBounds.getSouth());
+//             // increase height of #mapid to fit aspect ratio. use smooth animation
+//             var mapHeight = $('#mapid').height();
+//             var mapWidth = $('#mapid').width();
+//             var mapAspectRatio = mapWidth / mapHeight;
+//             console.log(imageAspectRatio, mapAspectRatio);
+//             if (imageAspectRatio > .5) {
+//                 var newHeight = mapWidth * imageAspectRatio;
+//                 var newHeight = imageHeight;
+//                 $('#mapid').animate({ height: newHeight }, 500);
+//             }
+
+//             // set map bounds
+//             map.fitBounds(imageBounds);
+
+//         });
+
+//         container.title = "Title";
+
+//         return container;
+//     },
+//     onRemove: function (map) { },
+// });
+
+// L.Draw.AddRegion = L.Draw.Polygon.extend({
+//     statics: {
+//         TYPE: "addregion"
+//     },
+//     Poly: L.AddRegion,
+//     options: {
+//         showArea: !1,
+//         showLength: !1,
+//         shapeOptions: {
+//             stroke: !0,
+//             color: "#3388ff",
+//             weight: 4,
+//             opacity: .5,
+//             fill: !0,
+//             fillColor: null,
+//             fillOpacity: .2,
+//             clickable: !0
+//         },
+//         metric: !0,
+//         feet: !0,
+//         nautic: !1,
+//         precision: {}
+//     },
+//     initialize: function (t, e) {
+//         L.Draw.Polyline.prototype.initialize.call(this, t, e),
+//             this.type = L.Draw.Polygon.TYPE
+//     },
+//     _updateFinishHandler: function () {
+//         var t = this._markers.length;
+//         1 === t && this._markers[0].on("click", this._finishShape, this),
+//             t > 2 && (this._markers[t - 1].on("dblclick", this._finishShape, this), t > 3 && this._markers[t - 2].off("dblclick", this._finishShape, this))
+//     },
+//     _getTooltipText: function () {
+//         var t,
+//             e;
+//         return 0 === this._markers.length ? t = L.drawLocal.draw.handlers.polygon.tooltip.start : this._markers.length < 3 ? (t = L.drawLocal.draw.handlers.polygon.tooltip.cont, e = this._getMeasurementString()) : (t = L.drawLocal.draw.handlers.polygon.tooltip.end, e = this._getMeasurementString()), {
+//             text: t,
+//             subtext: e
+//         }
+//     },
+//     _getMeasurementString: function () {
+//         var t = this._area,
+//             e = "";
+//         return t || this.options.showLength ? (this.options.showLength && (e = L.Draw.Polyline.prototype._getMeasurementString.call(this)), t && (e += "<br>" + L.GeometryUtil.readableArea(t, this.options.metric, this.options.precision)), e) : null
+//     },
+//     _shapeIsValid: function () {
+//         return this._markers.length >= 3
+//     },
+//     _vertexChanged: function (t, e) {
+//         var i;
+//         !this.options.allowIntersection && this.options.showArea && (i = this._poly.getLatLngs(), this._area = L.GeometryUtil.geodesicArea(i)),
+//             L.Draw.Polyline.prototype._vertexChanged.call(this, t, e)
+//     },
+//     _cleanUpShape: function () {
+//         var t = this._markers.length;
+//         t > 0 && (this._markers[0].off("click", this._finishShape, this), t > 2 && this._markers[t - 1].off("dblclick", this._finishShape, this))
+//     }
+// }),
+
+// L.Draw.Region = L.Draw.Rectangle.extend({
+//     statics: {
+//         TYPE: "region"
+//     },
+//     options: {
+//         shapeOptions: {
+//             stroke: !0,
+//             color: "#3388ff",
+//             weight: 4,
+//             opacity: .5,
+//             fill: !0,
+//             fillColor: null,
+//             fillOpacity: .2,
+//             clickable: !0
+//         },
+//         showArea: !0,
+//         metric: !0
+//     },
+//     initialize: function (t, e) {
+//         this.type = L.Draw.Region.TYPE,
+//             this._initialLabelText = L.drawLocal.draw.handlers.region.tooltip.start,
+//             L.Draw.SimpleShape.prototype.initialize.call(this, t, e)
+//     },
+//     disable: function () {
+//         this._enabled && (this._isCurrentlyTwoClickDrawing = !1, L.Draw.SimpleShape.prototype.disable.call(this))
+//     },
+//     _onMouseUp: function (t) {
+//         if (!this._shape && !this._isCurrentlyTwoClickDrawing)
+//             return void (this._isCurrentlyTwoClickDrawing = !0);
+
+//         this._isCurrentlyTwoClickDrawing && !o(t.target, "leaflet-pane") || L.Draw.SimpleShape.prototype._onMouseUp.call(this)
+//     },
+//     _drawShape: function (t) {
+//         this._shape ? this._shape.setBounds(new L.LatLngBounds(this._startLatLng, t)) : (this._shape = new L.Region(new L.LatLngBounds(this._startLatLng, t), this.options.shapeOptions), this._map.addLayer(this._shape))
+//     },
+//     _fireCreatedEvent: function () {
+//         var t = new L.Region(this._shape.getBounds(), this.options.shapeOptions);
+//         L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, t)
+//     },
+//     _getTooltipText: function () {
+//         var t,
+//             e,
+//             i,
+//             o = L.Draw.SimpleShape.prototype._getTooltipText.call(this),
+//             a = this._shape,
+//             n = this.options.showArea;
+//         return a && (t = this._shape._defaultShape ? this._shape._defaultShape() : this._shape.getLatLngs(), e = L.GeometryUtil.geodesicArea(t), i = n ? L.GeometryUtil.readableArea(e, this.options.metric) : ""), {
+//             text: o.text,
+//             subtext: i
+//         }
+//     }
+// });
+
+// L.DrawToolbar = L.Toolbar.extend({
+//     statics: {
+//         TYPE: "draw"
+//     },
+//     options: {
+//         polyline: {},
+//         polygon: {},
+//         rectangle: {},
+//         region: {},
+//         circle: {},
+//         marker: {},
+//         circlemarker: {}
+//     },
+//     initialize: function (t) {
+//         for (var e in this.options)
+//             this.options.hasOwnProperty(e) && t[e] && (t[e] = L.extend({}, this.options[e], t[e]));
+
+//         this._toolbarClass = "leaflet-draw-draw",
+//             L.Toolbar.prototype.initialize.call(this, t)
+//     },
+//     getModeHandlers: function (t) {
+//         return [
+//             {
+//                 enabled: this.options.polyline,
+//                 handler: new L.Draw.Polyline(t, this.options.polyline),
+//                 title: L.drawLocal.draw.toolbar.buttons.polyline
+//             },
+//             {
+//                 enabled: this.options.polygon,
+//                 handler: new L.Draw.Polygon(t, this.options.polygon),
+//                 title: L.drawLocal.draw.toolbar.buttons.polygon
+//             },
+//             {
+//                 enabled: this.options.rectangle,
+//                 handler: new L.Draw.Rectangle(t, this.options.rectangle),
+//                 title: L.drawLocal.draw.toolbar.buttons.rectangle
+//             },
+//             {
+//                 enabled: this.options.circle,
+//                 handler: new L.Draw.Circle(t, this.options.circle),
+//                 title: L.drawLocal.draw.toolbar.buttons.circle
+//             }, {
+//                 enabled: this.options.marker,
+//                 handler: new L.Draw.Marker(t, this.options.marker),
+//                 title: L.drawLocal.draw.toolbar.buttons.marker
+//             }, {
+//                 enabled: this.options.circlemarker,
+//                 handler: new L.Draw.CircleMarker(t, this.options.circlemarker),
+//                 title: L.drawLocal.draw.toolbar.buttons.circlemarker
+//             }, {
+//                 enabled: this.options.region,
+//                 handler: new L.Draw.Region(t, this.options.region),
+//                 title: L.drawLocal.draw.toolbar.buttons.region
+//             }
+//         ]
+//     },
+//     getActions: function (t) {
+//         return [
+//             {
+//                 enabled: t.completeShape,
+//                 title: L.drawLocal.draw.toolbar.finish.title,
+//                 text: L.drawLocal.draw.toolbar.finish.text,
+//                 callback: t.completeShape,
+//                 context: t
+//             }, {
+//                 enabled: t.deleteLastVertex,
+//                 title: L.drawLocal.draw.toolbar.undo.title,
+//                 text: L.drawLocal.draw.toolbar.undo.text,
+//                 callback: t.deleteLastVertex,
+//                 context: t
+//             }, {
+//                 title: L.drawLocal.draw.toolbar.actions.title,
+//                 text: L.drawLocal.draw.toolbar.actions.text,
+//                 callback: this.disable,
+//                 context: this
+//             }, {
+//                 title: L.drawLocal.draw.toolbar.buttons.clear,
+//                 text: L.drawLocal.draw.toolbar.buttons.clear,
+//                 callback: this.clearAll,
+//                 context: this
+//             }
+//         ]
+//     },
+//     setOptions: function (t) {
+//         L.setOptions(this, t);
+//         for (var e in this._modes)
+//             this._modes.hasOwnProperty(e) && t.hasOwnProperty(e) && this._modes[e].handler.setOptions(t[e])
+
+//     }
+// });
+
+// var regionControl = new L.Control.Draw({
+//     draw: {
+//         rectangle: false,
+//         polygon: false,
+//         marker: false,
+//         circle: false,
+//         region: true,
+//         polyline: false,
+//         circlemarker: false
+//     },
+//     position: 'topright',
+//     edit: {
+//         featureGroup: regionlayer,
+//         edit: true,
+//         remove: true
+//     }
+// });
 
 function formatForPopup(objects) {
     var formatted = '<div class="ui compact grid">';
@@ -1127,10 +1417,12 @@ $(document).ready(async function () {
         drawControl: false,
         attributionControl: false,
         preferCanvas: true,
-        maxBoundsViscosity: .5
+        maxBoundsViscosity: .5,
     });
 
     map.addControl(zoomControl);
+    // var control = new L.Control.Region()
+    // control.addTo(map);
     map.addControl(drawControl);
 
     $('#boxFile').change(loadBoxFile);

@@ -78,6 +78,24 @@ $('#updateTxt').popup('get popup').css('scrollbar-width', 'none'); */
   color: transparent;
 }
 
+/* keep selected text in #formtxt transparent */
+/* webkit browsers */
+#formtxt::selection {
+  color: transparent;
+  background: #65656533;
+  /* mix-blend-mode: exclusion; */
+}
+
+/* getko brosers */
+#formtxt::-moz-selection {
+  color: transparent;
+  background: #65656533;
+}
+
+.no-kerning {
+  font-kerning: none;
+}
+
 div.ui.mini.red.empty.circular.label {
   background: linear-gradient(to bottom, #e66a6a 50%, #db2828 50%);
   border-radius: 7000;
@@ -7207,21 +7225,37 @@ div.ui.mini.blue.empty.circular.label {
     background-color: #414141;
     color: rgba(255, 255, 255, 0.9);
   }
+
   .ui.toast-container .ui.toast.error {
     background-color: #2e0808;
     color: rgba(255, 255, 255, 0.9);
   }
+
   .ui.toast-container .ui.toast.warning {
     background-color: #3f2f04;
     color: rgba(255, 255, 255, 0.9);
   }
+
   .ui.toast-container .ui.toast.success {
     background-color: #0a3815;
     color: rgba(255, 255, 255, 0.9);
   }
+
   .ui.toast-container .ui.toast.info {
     background-color: #052b33;
     color: rgba(255, 255, 255, 0.9);
+  }
+
+  .ui.popup {
+    background: #3d3e3f;
+    color: #fff;
+    border: none;
+    box-shadow: 1px 1px 10px 2px #000000;
+  }
+  .ui.popup::before,
+  .ui.top.popup::before,
+  .ui.bottom.popup::before {
+    background: #3d3e3f;
   }
 
 }

@@ -514,8 +514,8 @@ async function generateInitialBoxes(image) {
     });
     // await worker.loadLanguage('LATCYR_from_Cyrillic');
     // await worker.initialize('LATCYR_from_Cyrillic');
-    await worker.loadLanguage(['osd', 'LATCYR_from_Cyrillic']);
-    await worker.initialize(['osd', 'LATCYR_from_Cyrillic']);
+    await worker.loadLanguage(['osd', 'RTS_from_Cyrillic']);
+    await worker.initialize(['osd', 'RTS_from_Cyrillic']);
     // TODO: 06/04/2023 Continue setting parameters to discover columns and not assume single block.
     await worker.setParameters({
         // tessedit_ocr_engine_mode: OcrEngineMode.OEM_LSTM_ONLY,

@@ -8,6 +8,10 @@ var boxFileNameForButton;
 var boxdataIsDirty = false;
 var lineIsDirty = false;
 var unicodeData;
+var imageIsProcessed = false;
+var recognizedLinesOfText = [];
+var imageHeight;
+var imageWidth;
 
 class Box {
     constructor({
@@ -318,11 +322,30 @@ function deleteBox(box) {
     if (boxindex > -1) {
         boxdata.splice(boxindex, 1);
     }
+    deleteBoxFromResults(box);
     return boxindex
 }
 
+function deleteBoxFromResults(box) {
+    var boxindex = recognizedLinesOfText.findIndex(function (d) {
+        // find matching box by bounding box
+        d = d.bbox;
+        var d = new Box({
+            text: '',
+            y1: imageHeight - d.y1, // bottom
+            y2: imageHeight - d.y0, // top
+            x1: d.x0, // right
+            x2: d.x1 // left
+        })
+        return d.x1 == box.x1 && d.y1 == box.y1 && d.x2 == box.x2 && d.y2 == box.y2
+    });
+    if (boxindex > -1) {
+        recognizedLinesOfText.splice(boxindex, 1);
+    }
+}
+
 function onRectClick(event) {
-    console.log(event.target.editing);
+    // console.log(event.target.editing);
     // if editing is enabled, do nothing
     if (event.target.editing.enabled()) {
         return;
@@ -507,17 +530,56 @@ async function generateInitialBoxes(image) {
     const results = await worker.recognize(image);
     // const results = await worker.recognize(image, { rectangle });
     // await worker.terminate();
+    recognizedLinesOfText = results.data.lines;
+    await insertSuggestions($('.ui.include-suggestions.checkbox').checkbox('is checked'));
+    setMainLoadingStatus(false);
+    setButtonsEnabledState(true);
+    $('#formrow').removeClass('hidden');
+    // select next BB
+    var nextBB = getNextBB();
+    fillAndFocusRect(nextBB);
+}
 
-    // get bounding boxes from results.data.lines
-    var lines = results.data.lines;
+// if selected box is deleted, select closest box
+function selectClosestBox() {
+    var nextBB = getNextBB();
+    if (nextBB) {
+        fillAndFocusRect(nextBB);
+    } else {
+        var prevBB = getPrevBB();
+        if (prevBB) {
+            fillAndFocusRect(prevBB);
+        }
+    }
+}
+
+
+async function insertSuggestions(bool) {
+    // if data is dirty
+    if (boxdataIsDirty) {
+        // warn user
+        var result = await askUser({
+            title: 'Warning',
+            message: 'Suggestions will be generated from the current text. Do you want to continue?',
+            confirmText: 'Yes',
+            denyText: 'No'
+        });
+        if (!result) {
+            return;
+        }
+    }
+    // clear all boxes
+    boxlayer.clearLayers();
+    boxdata = [];
+    var lines = recognizedLinesOfText;
     for (var i = 0; i < lines.length; i++) {
         var line = lines[i];
         var box = line.bbox;
         var text = line.text;
         var symbole = new Box({
-            text: '',
-            y1: image.height - box.y1, // bottom
-            y2: image.height - box.y0, // top
+            text: bool ? text : '',
+            y1: imageHeight - box.y1, // bottom
+            y2: imageHeight - box.y0, // top
             x1: box.x0, // right
             x2: box.x1 // left
         })
@@ -537,17 +599,12 @@ async function generateInitialBoxes(image) {
         var polyid = boxlayer.getLayerId(rect)
         symbole.polyid = polyid
         boxdata.push(symbole);
+        map.addLayer(boxlayer);
+        numberOFBoxes = boxdata.length;
+        selectClosestBox();
     }
-    map.addLayer(boxlayer);
-    setMainLoadingStatus(false);
-    setButtonsEnabledState(true);
-    numberOFBoxes = boxdata.length;
-
-    $('#formrow').removeClass('hidden');
-    // select next BB
-    var nextBB = getNextBB();
-    fillAndFocusRect(nextBB);
 }
+
 
 async function askUser(object) {
     setPromptKeyboardControl();
@@ -780,6 +837,8 @@ async function loadImageFile(e) {
                 image = new L.imageOverlay(img.src, bounds, imageOverlayOptions).addTo(map);
                 $(image._image).fadeIn(750);
             }
+            imageHeight = this.height;
+            imageWidth = this.width;
         };
         img.onerror = function () {
             var ext = file.name.split('.').pop();
@@ -1403,6 +1462,27 @@ $(document).ready(async function () {
         $('#myInputBackground').removeClass('focused');
     });
 
+    $('.ui.checkbox').checkbox();
+
+    // set checkbox from cookie
+    if (Cookies.get('include-suggestions') == 'true') {
+        $('.ui.include-suggestions.toggle.checkbox').checkbox('check');
+    } else {
+        $('.ui.include-suggestions.toggle.checkbox').checkbox('uncheck');
+    }
+
+    // save cookie for checkbox
+    $('.ui.include-suggestions.toggle.checkbox').checkbox({
+        onChecked: function () {
+            Cookies.set('include-suggestions', 'true');
+            insertSuggestions(true);
+        },
+        onUnchecked: function () {
+            Cookies.set('include-suggestions', 'false');
+            insertSuggestions(false);
+        }
+    });
+
     map = new L.map('mapid', {
         crs: L.CRS.Simple,
         minZoom: -1,
@@ -1430,13 +1510,14 @@ $(document).ready(async function () {
 
     map.on('draw:deleted', function (event) {
         Object.keys(event.layers._layers).forEach(function (x) {
-            var polyid = parseInt(x)
+            var polyid = parseInt(x);
             var delbox = boxdata.find(function (x) {
                 return x.polyid == polyid;
             });
 
             var delindex = deleteBox(delbox);
         });
+        updateProgressBar({ type: 'tagging' });
     });
 
     map.on(L.Draw.Event.CREATED, function (event) {
@@ -1505,7 +1586,7 @@ function downloadFile(content, fileExtension) {
 }
 
 function showCharInfoPopup(e) { // prevent modifier keys from triggering popup
-    if (e.ctrlKey || e.altKey || e.metaKey) {
+    if (e.ctrlKey || e.altKey || e.metaKey || e.keyCode == 13) {
         return;
     }
     if (e.keyCode == 13) {
@@ -1533,6 +1614,15 @@ function showCharInfoPopup(e) { // prevent modifier keys from triggering popup
         return;
     } else {
         formatted = formatForPopup(results);
+        // apply style to popup
+        // max-height: 40em;overflow: scroll;
+        $('#updateTxt').popup('get popup').css('max-height', '20em');
+        $('#updateTxt').popup('get popup').css('overflow', 'scroll');
+        $('#updateTxt').popup('get popup').css('scrollbar-width', 'none');
+        $('#updateTxt').popup('get popup').css('scrollbar-width', 'none');
+        $('#updateTxt').popup('get popup').css('-ms-overflow-style', 'none');
+        // apply popup scrollbar for webkit
+        $('#updateTxt').popup('get popup').css('scrollbar-width', 'none');
 
         if ($('#updateTxt').popup('is visible')) {
             $('#updateTxt').popup('change content (html)', formatted)

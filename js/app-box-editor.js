@@ -732,10 +732,13 @@ function updateProgressBar(options = {}) {
     }
     if (options.type == 'tagging') {
         var currentPosition = boxdata.indexOf(selectedBox);
-        $('#positionProgress').progress({
-            value: currentPosition + 1,
-            total: boxdata.length
-        });
+        $('.ui.slider').slider('set value', currentPosition + 1);
+        // set max value
+        $('.ui.slider').slider('setting', 'max', boxdata.length);
+        // $('#positionProgress').progress({
+        //     value: currentPosition + 1,
+        //     total: boxdata.length
+        // });
         if (boxdata.every(function (el) {
             return el.filled;
         })) {
@@ -1527,6 +1530,14 @@ $(document).ready(async function () {
             insertSuggestions(false);
         }
     });
+
+    $('.ui.slider')
+        .slider({
+            min: 1,
+            step: 1,
+            smooth: true
+        })
+        ;
 
     map = new L.map('mapid', {
         crs: L.CRS.Simple,

@@ -12,6 +12,9 @@ var imageIsProcessed = false;
 var recognizedLinesOfText = [];
 var imageHeight;
 var imageWidth;
+var mapHeight;
+var mapDeletingState = false;
+var mapEditingState = false;
 
 class Box {
     constructor({
@@ -345,9 +348,14 @@ function deleteBoxFromResults(box) {
 }
 
 function onRectClick(event) {
-    // console.log(event.target.editing);
+    console.log(event.target);
+
     // if editing is enabled, do nothing
     if (event.target.editing.enabled()) {
+        return;
+    }
+    // if mapDeletingState is enabled, do nothing
+    if (mapDeletingState) {
         return;
     }
     var rect = event.target;
@@ -1074,6 +1082,43 @@ var drawControl = new L.Control.Draw({
 //     onRemove: function (map) { },
 // });
 
+async function setMapSize(options) {
+    if (options.largeView) {
+        // Get bounds of image from map
+        var imageBounds = map.getBounds();
+        // get image height and width
+        // var imageHeight = imageBounds.getNorth() - imageBounds.getSouth();
+        // var imageWidth = imageBounds.getEast() - imageBounds.getWest();
+        // get aspect ratio of image
+        var imageAspectRatio = imageBounds.getEast() - imageBounds.getWest();
+        imageAspectRatio = imageAspectRatio / (imageBounds.getNorth() - imageBounds.getSouth());
+        // increase height of #mapid to fit aspect ratio. use smooth animation
+        var mapHeight = $('#mapid').height();
+        var mapWidth = $('#mapid').width();
+        var mapAspectRatio = mapWidth / mapHeight;
+        console.log(imageAspectRatio, mapAspectRatio);
+        if (imageAspectRatio > .5) {
+            var newHeight = mapWidth * imageAspectRatio;
+            var newHeight = imageHeight/2;
+            await resizeMapTo(newHeight);
+        }
+        // map.fitBounds(imageBounds);
+    } else {
+        await resizeMapTo(280);
+        // fit selected poly
+        var bounds = new L.LatLngBounds();
+        for (var i = 0; i < selectedPoly.length; i++) {
+            bounds.extend(selectedPoly[i].getBounds());
+        }
+        // map.fitBounds(bounds);
+    }
+    setTimeout(function () { map.invalidateSize({pan:false}) }, 500);
+}
+
+async function resizeMapTo(height, duration = 500) {
+    $('#mapid').animate({ height: height }, duration);
+}
+
 // L.Draw.AddRegion = L.Draw.Polygon.extend({
 //     statics: {
 //         TYPE: "addregion"
@@ -1519,6 +1564,22 @@ $(document).ready(async function () {
         });
         updateProgressBar({ type: 'tagging' });
     });
+    map.on('draw:deletestart', async function (event) {
+        mapDeletingState = true;
+        await setMapSize({ largeView: true });
+    });
+    map.on('draw:deletestop', async function (event) {
+        await setMapSize({ largeView: false });
+        mapDeletingState = false;
+    });
+    // map.on('draw:drawstart', async function (event) {
+    //     mapEditingState = true;
+    //     await setMapSize({ largeView: true });
+    // });
+    // map.on('draw:drawstop', async function (event) {
+    //     await setMapSize({ largeView: false });
+    //     mapEditingState = false;
+    // });
 
     map.on(L.Draw.Event.CREATED, function (event) {
         var layer = event.layer;

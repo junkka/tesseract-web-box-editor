@@ -13,7 +13,8 @@ var recognizedLinesOfText = [];
 var imageHeight;
 var imageWidth;
 var mapHeight;
-var deleting = false;
+var mapDeletingState = false;
+var mapEditingState = false;
 
 class Box {
     constructor({
@@ -353,8 +354,8 @@ function onRectClick(event) {
     if (event.target.editing.enabled()) {
         return;
     }
-    // if deleting is enabled, do nothing
-    if (deleting) {
+    // if mapDeletingState is enabled, do nothing
+    if (mapDeletingState) {
         return;
     }
     var rect = event.target;
@@ -1564,13 +1565,21 @@ $(document).ready(async function () {
         updateProgressBar({ type: 'tagging' });
     });
     map.on('draw:deletestart', async function (event) {
-        deleting = true;
+        mapDeletingState = true;
         await setMapSize({ largeView: true });
     });
     map.on('draw:deletestop', async function (event) {
         await setMapSize({ largeView: false });
-        deleting = false;
+        mapDeletingState = false;
     });
+    // map.on('draw:drawstart', async function (event) {
+    //     mapEditingState = true;
+    //     await setMapSize({ largeView: true });
+    // });
+    // map.on('draw:drawstop', async function (event) {
+    //     await setMapSize({ largeView: false });
+    //     mapEditingState = false;
+    // });
 
     map.on(L.Draw.Event.CREATED, function (event) {
         var layer = event.layer;

@@ -46,10 +46,19 @@ class Box {
         var aCenterY = (a.y1 + a.y2) / 2;
         var bCenterX = (b.x1 + b.x2) / 2;
         var bCenterY = (b.y1 + b.y2) / 2;
-        // check if at least one center is within the horizontal distance of the other box
-        if ((aCenterX > b.x1 - tolerance && aCenterX < b.x2 + tolerance) || (bCenterX > a.x1 - tolerance && bCenterX < a.x2 + tolerance)) {
-            // console.log("boxes " + a.text + " and " + b.text + " vertically aligned");
-            if (bCenterY - aCenterY < 0) {
+        // check if at least one center is within the vertical distance of the other box
+        if ((aCenterY > b.y1 && aCenterY < b.y2) || (bCenterY > a.y1 && bCenterY < a.y2)) {
+            console.log("boxes " + a.text + " and " + b.text + " horizontally aligned");
+            if (aCenterX - bCenterX < 0) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
+        // check if at least one horizontal side is within the horizontal distance of the other box
+        if ((a.x1 > b.x1 - tolerance && a.x1 < b.x2 + tolerance) || (b.x1 > a.x1 - tolerance && b.x1 < a.x2 + tolerance)) {
+            // console.log("boxes " + a.text + " and " + b.text + " horizontally aligned");
+            if (aCenterY - bCenterY > 0) {
                 return -1;
             } else {
                 return 1;

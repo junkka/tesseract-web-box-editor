@@ -186,7 +186,8 @@ function focusRectangle(rect) {
         animate: true,
         paddingBottomRight: [40, 0],
         duration: .25,
-        easeLinearity: 0.25
+        easeLinearity: 0.25,
+        // noMoveStart: true
     });
     selectedPoly = rect
     setStyle(rect)
@@ -608,9 +609,9 @@ async function insertSuggestions(bool) {
         symbole.polyid = polyid
         boxdata.push(symbole);
         map.addLayer(boxlayer);
-        numberOFBoxes = boxdata.length;
-        selectClosestBox();
     }
+    numberOFBoxes = boxdata.length;
+    selectClosestBox();
 }
 
 
@@ -725,6 +726,16 @@ async function setButtonsEnabledState(state) {
     }
 }
 
+function updateSlider(options) {
+    if (options.max)
+        $('.ui.slider').slider('setting', 'max', options.max);
+    if (options.value)
+        $('.ui.slider').slider('set value', options.value, fireChange = false);
+    if (options.min)
+        $('.ui.slider').slider('setting', 'min', options.min);
+    return
+}
+
 function updateProgressBar(options = {}) {
     if (options.reset) {
         $('#editingProgress .label').text('');
@@ -732,9 +743,10 @@ function updateProgressBar(options = {}) {
     }
     if (options.type == 'tagging') {
         var currentPosition = boxdata.indexOf(selectedBox);
-        $('.ui.slider').slider('set value', currentPosition + 1);
+        updateSlider({ value: currentPosition + 1 });
+        // $('.ui.slider').slider('set value', currentPosition + 1);
         // set max value
-        $('.ui.slider').slider('setting', 'max', boxdata.length);
+        // $('.ui.slider').slider('setting', 'max', boxdata.length);
         // $('#positionProgress').progress({
         //     value: currentPosition + 1,
         //     total: boxdata.length
@@ -866,6 +878,7 @@ async function loadImageFile(e) {
             groundTruthDownloadButton: imageFileName + '.gt.txt'
         });
         result = await generateInitialBoxes(img)
+        initializeSlider();
         boxdataIsDirty = false;
         updateProgressBar({ type: 'tagging' });
         $('#formtxt').focus();
@@ -873,6 +886,30 @@ async function loadImageFile(e) {
         // fade image opacity back to 1 during 500ms
         $(image._image).animate({ opacity: 1 }, 500);
     }
+}
+
+function initializeSlider() {
+    $('.ui.slider')
+        .slider({
+            min: 1,
+            max: boxdata.length,
+            step: 1,
+            start: 1,
+            smooth: true,
+            onChange: function (value) {
+                // displayMessage({ message: 'Slider value changed to ' + value + '.' });
+            },
+            onMove: function (value) {
+                // displayMessage({ type: 'warning', message: 'Slider value moving to ' + value + '.' });
+                if ($('.ui.slider').slider('get value') == value) {
+                    return;
+                }
+                // select box with index = value
+                if (value > 0 && value <= boxdata.length) {
+                    fillAndFocusRect(boxdata[value - 1]);
+                }
+            },
+        });
 }
 
 function updateDownloadButtonsLabels(options = {}) {
@@ -1530,14 +1567,6 @@ $(document).ready(async function () {
             insertSuggestions(false);
         }
     });
-
-    $('.ui.slider')
-        .slider({
-            min: 1,
-            step: 1,
-            smooth: true
-        })
-        ;
 
     map = new L.map('mapid', {
         crs: L.CRS.Simple,

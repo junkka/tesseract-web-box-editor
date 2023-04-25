@@ -1664,6 +1664,7 @@ $(document).ready(async function () {
         } else {
             idx = 0;
         } boxdata.splice(idx + 1, 0, newbb);
+        sortAllBoxes();
         initializeSlider();
         fillAndFocusRect(newbb);
     });

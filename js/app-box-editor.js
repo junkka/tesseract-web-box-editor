@@ -541,7 +541,7 @@ async function generateInitialBoxes(image) {
         // tessedit_ocr_engine_mode: "OcrEngineMode.OEM_LSTM_ONLY",
         // tessedit_pageseg_mode: "PSM_AUTO_OSD"
         tessedit_ocr_engine_mode: 1,
-        tessedit_pageseg_mode: 12
+        tessedit_pageseg_mode: 1,// 12
     });
     // const results = await worker.recognize(image, { left: image.width, top: image.height, width: 10, height: 10 });
     // run worker on half of the image
@@ -740,7 +740,7 @@ function updateSlider(options) {
     if (options.max)
         // $('.ui.slider').slider('setting', 'max', options.max);
         initializeSlider();
-        if (options.value)
+    if (options.value)
         $('.ui.slider').slider('set value', options.value, fireChange = false);
     if (options.min)
         $('.ui.slider').slider('setting', 'min', options.min);
@@ -754,7 +754,7 @@ function updateProgressBar(options = {}) {
     }
     if (options.type == 'tagging') {
         var currentPosition = boxdata.indexOf(selectedBox);
-        updateSlider({ value: currentPosition + 1});
+        updateSlider({ value: currentPosition + 1 });
         // $('.ui.slider').slider('set value', currentPosition + 1);
         // set max value
         // $('.ui.slider').slider('setting', 'max', boxdata.length);
@@ -1081,10 +1081,10 @@ var zoomControl = new L.Control.Zoom({ position: 'topright' });
 
 var drawControl = new L.Control.Draw({
     draw: {
-        polygon: false,
+        polygon: true,
         marker: false,
         circle: false,
-        polyline: false,
+        polyline: true,
         rectangle: true,
         circlemarker: false
     },
@@ -1159,7 +1159,7 @@ async function setMapSize(options) {
         console.log(imageAspectRatio, mapAspectRatio);
         if (imageAspectRatio > .5) {
             var newHeight = mapWidth * imageAspectRatio;
-            var newHeight = imageHeight/2;
+            var newHeight = imageHeight / 2;
             await resizeMapTo(newHeight);
         }
         // map.fitBounds(imageBounds);
@@ -1172,7 +1172,7 @@ async function setMapSize(options) {
         }
         // map.fitBounds(bounds);
     }
-    setTimeout(function () { map.invalidateSize({pan:false}) }, 500);
+    setTimeout(function () { map.invalidateSize({ pan: false }) }, 500);
 }
 
 async function resizeMapTo(height, duration = 500) {
@@ -1528,6 +1528,29 @@ const setKerning = (elements, kerning) => {
     }
 };
 
+// split the box by the intersection of the box and the polyline using turf.js bboxclip
+function cutBoxByPoly(box, poly) {
+    // var polyFeature = turf.polygon(poly);
+    // var multiLine = turf.multiLineString([[[0,0],[10,10]]]);
+    // make multilinestring from polyline
+    var polyFeature = turf.lineString(poly);
+    // var polyFeature = turf.lineToPolygon(poly);
+    // convert poly latlngs y component to image height - y
+    // polyFeature.geometry.coordinates._latlngs.forEach(function (element) {
+    //     element.lat = imageHeight - element.lat;
+    // });
+    var boxFeature = turf.bboxPolygon([box.x1, box.y1, box.x2, box.y2]);
+    // var intersects = turf.booleanIntersects(boxFeature, polyFeature);
+    // TODO: for each segment in the polyline, if overlaps with box, clip box
+    // be careful of cases when the end of a segment is inside the box
+    var clipped = turf.bboxClip(boxFeature, polyFeature);
+    if (clipped.geometry.coordinates.length == 0) {
+        return [];
+    }
+    var clippedBox = clipped.geometry.coordinates[0];
+    return [clippedBox[0][0], clippedBox[0][1], clippedBox[2][0], clippedBox[2][1]];
+}
+
 $(document).ready(async function () {
     colorizedFields = [];
     colorizedFields.push($('#myInputBackground')[0]);
@@ -1633,40 +1656,83 @@ $(document).ready(async function () {
         mapDeletingState = false;
         updateSlider({ max: boxdata.length });
     });
-    // map.on('draw:drawstart', async function (event) {
-    //     mapEditingState = true;
-    //     await setMapSize({ largeView: true });
-    // });
-    // map.on('draw:drawstop', async function (event) {
-    //     await setMapSize({ largeView: false });
-    //     mapEditingState = false;
-    // });
+    map.on('draw:drawstart', async function (event) {
+        mapEditingState = true;
+        await setMapSize({ largeView: true });
+    });
+    map.on('draw:drawstop', async function (event) {
+        await setMapSize({ largeView: false });
+        mapEditingState = false;
+    });
 
     map.on(L.Draw.Event.CREATED, function (event) {
-        var layer = event.layer;
-        layer.on('edit', editRect);
-        layer.on('click', onRectClick);
-        boxlayer.addLayer(layer);
-        var polyid = boxlayer.getLayerId(layer)
-        var newbb = new Box({
-            polyid: polyid,
-            text: '',
-            x1: Math.round(layer._latlngs[0][0].lng),
-            y1: Math.round(layer._latlngs[0][0].lat),
-            x2: Math.round(layer._latlngs[0][2].lng),
-            y2: Math.round(layer._latlngs[0][2].lat)
-        })
-        var idx;
-        if (selectedBox) {
-            idx = boxdata.findIndex(function (x) {
-                return x.polyid == selectedBox.polyid;
+        if (event.layerType === 'rectangle') {
+
+            var layer = event.layer;
+            layer.on('edit', editRect);
+            layer.on('click', onRectClick);
+            boxlayer.addLayer(layer);
+            var polyid = boxlayer.getLayerId(layer)
+            var newbb = new Box({
+                polyid: polyid,
+                text: '',
+                x1: Math.round(layer._latlngs[0][0].lng),
+                y1: Math.round(layer._latlngs[0][0].lat),
+                x2: Math.round(layer._latlngs[0][2].lng),
+                y2: Math.round(layer._latlngs[0][2].lat)
+            })
+            var idx;
+            if (selectedBox) {
+                idx = boxdata.findIndex(function (x) {
+                    return x.polyid == selectedBox.polyid;
+                });
+            } else {
+                idx = 0;
+            } boxdata.splice(idx + 1, 0, newbb);
+            sortAllBoxes();
+            initializeSlider();
+            fillAndFocusRect(newbb);
+            return;
+        }
+        if (event.layerType === 'polyline') {
+        // if (event.layerType === 'polygon') {
+            // cut all boxes by the polygon line
+            var poly = event.layer;
+            var polyid = boxlayer.getLayerId(poly);
+            var polybounds = poly.getBounds();
+            var polybox = new Box({
+                polyid: polyid,
+                text: '',
+                x1: Math.round(polybounds._southWest.lng),
+                y1: Math.round(polybounds._southWest.lat),
+                x2: Math.round(polybounds._northEast.lng),
+                y2: Math.round(polybounds._northEast.lat)
             });
-        } else {
-            idx = 0;
-        } boxdata.splice(idx + 1, 0, newbb);
-        sortAllBoxes();
-        initializeSlider();
-        fillAndFocusRect(newbb);
+            var newboxes = [];
+            for (var i = 0; i < boxdata.length; i++) {
+                var box = boxdata[i];
+                var boxbounds = L.latLngBounds([box.y1, box.x1], [box.y2, box.x2]);
+                var intersection = polybounds.intersects(boxbounds);
+                if (intersection) {
+                    var newbox = cutBoxByPoly(box, poly);
+                    if (newbox) {
+                        newboxes.push(newbox);
+                    }
+                }
+            }
+            for (var i = 0; i < newboxes.length; i++) {
+                var newbox = newboxes[i];
+                var newpoly = L.rectangle([[newbox.y1, newbox.x1], [newbox.y2, newbox.x2]], { color: 'red', weight: 2, fill: false });
+                newpoly.on('edit', editRect);
+                newpoly.on('click', onRectClick);
+                boxlayer.addLayer(newpoly);
+                var polyid = boxlayer.getLayerId(newpoly)
+                newbox.polyid = polyid;
+                boxdata.push(newbox);
+            }
+            updateProgressBar({ type: 'tagging' });
+            updateSlider({ max: boxdata.length });
+        }
     });
 
 

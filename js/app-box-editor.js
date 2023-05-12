@@ -531,10 +531,10 @@ async function generateInitialBoxes(image) {
         gzip: false,
         logger: m => processWorkerLogMessage(m)
     });
-    // await worker.loadLanguage('LATCYR_from_Cyrillic');
-    // await worker.initialize('LATCYR_from_Cyrillic');
-    await worker.loadLanguage(['osd', 'RTS_from_Cyrillic']);
-    await worker.initialize(['osd', 'RTS_from_Cyrillic']);
+    await worker.loadLanguage('LATCYR_from_Cyrillic');
+    await worker.initialize('LATCYR_from_Cyrillic');
+    // await worker.loadLanguage(['osd', 'RTS_from_Cyrillic']);
+    // await worker.initialize(['osd', 'RTS_from_Cyrillic']);
     // TODO: 06/04/2023 Continue setting parameters to discover columns and not assume single block.
     await worker.setParameters({
         // tessedit_ocr_engine_mode: OcrEngineMode.OEM_LSTM_ONLY,
@@ -1664,6 +1664,7 @@ $(document).ready(async function () {
         } else {
             idx = 0;
         } boxdata.splice(idx + 1, 0, newbb);
+        sortAllBoxes();
         initializeSlider();
         fillAndFocusRect(newbb);
     });

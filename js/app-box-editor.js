@@ -1543,6 +1543,12 @@ function cutBoxByPoly(box, poly) {
     // var intersects = turf.booleanIntersects(boxFeature, polyFeature);
     // TODO: for each segment in the polyline, if overlaps with box, clip box
     // be careful of cases when the end of a segment is inside the box
+
+    // // add two more points to the polyline to the far left
+    // var leftPoly = poly.slice();
+    // leftPoly.push([0, poly[0][1]]);
+    // leftPoly.push([0, poly[0][1] + 1]);
+
     var clipped = turf.bboxClip(boxFeature, polyFeature);
     if (clipped.geometry.coordinates.length == 0) {
         return [];

@@ -740,7 +740,7 @@ function updateSlider(options) {
     if (options.max)
         // $('.ui.slider').slider('setting', 'max', options.max);
         initializeSlider();
-        if (options.value)
+    if (options.value)
         $('.ui.slider').slider('set value', options.value, fireChange = false);
     if (options.min)
         $('.ui.slider').slider('setting', 'min', options.min);
@@ -930,6 +930,9 @@ function initializeSlider() {
                 }
             },
         });
+    // unbind keydown event from slider
+    $('.ui.slider').off('keydown.slider');
+    $(document).off('keydown.slider1');
 }
 
 function updateDownloadButtonsLabels(options = {}) {

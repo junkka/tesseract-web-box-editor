@@ -1000,12 +1000,15 @@ async function colorize(text) {
                 current_script = span_class;
             }
         } else if (char == ' ') {
+            span_class = 'space';
             if (current_script == 'space') {
-                current_span += '&nbsp;';
+                // current_span += '&nbsp;';
+                current_span += '·';
             } else {
                 colored_text += '</span>' + current_span;
-                current_span = '&nbsp;';
-                current_script = 'space';
+                // current_span = '<span class="' + span_class + '">' + '&nbsp;';
+                current_span = '<span class="' + span_class + '">' + '·';
+                current_script = span_class;
             }
         } else if (latin_pattern.test(char)) {
             if (isCapital)
@@ -1530,6 +1533,7 @@ const setKerning = (elements, kerning) => {
 
 // split the box by the intersection of the box and the polyline using turf.js bboxclip
 function cutBoxByPoly(box, poly) {
+    // split poly into segments
     // var polyFeature = turf.polygon(poly);
     // var multiLine = turf.multiLineString([[[0,0],[10,10]]]);
     // make multilinestring from polyline
@@ -1540,14 +1544,14 @@ function cutBoxByPoly(box, poly) {
     //     element.lat = imageHeight - element.lat;
     // });
     var boxFeature = turf.bboxPolygon([box.x1, box.y1, box.x2, box.y2]);
-    // var intersects = turf.booleanIntersects(boxFeature, polyFeature);
-    // TODO: for each segment in the polyline, if overlaps with box, clip box
-    // be careful of cases when the end of a segment is inside the box
-
-    // // add two more points to the polyline to the far left
-    // var leftPoly = poly.slice();
-    // leftPoly.push([0, poly[0][1]]);
-    // leftPoly.push([0, poly[0][1] + 1]);
+    // for each segment of the polyline, find the intersection with the box
+    var splitLines = [];
+    for (var i = 0; i < poly._latlngs.length - 1; i++) {
+        var line = L.polyline([poly._latlngs[i], poly._latlngs[i + 1]])
+        var intersection = turf.lineIntersect(boxFeature, line.toGeoJSON());
+        splitLines.push(intersection);
+    }
+    // var intersection = turf.lineIntersect(boxFeature, poly.toGeoJSON());
 
     var clipped = turf.bboxClip(boxFeature, polyFeature);
     if (clipped.geometry.coordinates.length == 0) {

@@ -57,26 +57,32 @@ $('#updateTxt').popup('get popup').css('scrollbar-width', 'none'); */
 }
 
 /* Define styles for colorized text */
-.cyrillic {
+span.cyrillic {
   color: #db2828;
 }
 
-.latin {
+span.latin {
   color: #2185d0;
 }
 
+
 /* Captial letters lighter */
-.cyrillic.capital {
+span.cyrillic.capital {
   color: #e66a6a;
 }
 
-.latin.capital {
+span.latin.capital {
   color: #59a9e5;
 }
 
-.space {
-  color: transparent;
+span.space {
+  /* color: transparent; */
+  opacity: 0.2;
 }
+
+/* span.space::before {
+  content: "·";
+} */
 
 /* keep selected text in #formtxt transparent */
 /* webkit browsers */

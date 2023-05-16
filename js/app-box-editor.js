@@ -508,8 +508,14 @@ $('#formtxt').on('focus', function () {
 function setMainLoadingStatus(status) {
     if (status) {
         $('#mapid').addClass('loading');
+        if (image != undefined) {
+            $(image._image).animate({ opacity: .3 }, 200);
+        }
     } else {
         $('#mapid').removeClass('loading');
+        if (image != undefined) {
+            $(image._image).animate({ opacity: 1 }, 500);
+        }
     }
 }
 
@@ -522,7 +528,7 @@ function processWorkerLogMessage(message) {
     } updateProgressBar(message);
 }
 
-async function redetectText() {
+async function redetectText(rectList) {
     // boxdata.forEach(async function (box) {
     //     rectangle = { left: box.x1, top: box.y1, width: box.x2 - box.x1, height: box.y2 - box.y1 }
     //     await worker.setParameters({
@@ -532,10 +538,13 @@ async function redetectText() {
     //     result = await worker.recognize(image._image, { rectangle })
     //     box.text = result.data.text;
     // });
-    for (i = 0; i < boxdata.length; i++) {
-        var box = boxdata[i];
+    if (rectList.length == 0) {
+        rectList = boxdata;
+    }
+    for (i = 0; i < rectList.length; i++) {
+        var box = rectList[i];
         // rectangle = { left: box.x1, top: box.y1, width: box.x2 - box.x1, height: box.y2 - box.y1 }
-        rectangle = { left: box.x1, top: imageHeight - box.y2, width: box.x2 - box.x1, height: box.y2- box.y1 }
+        rectangle = { left: box.x1, top: imageHeight - box.y2, width: box.x2 - box.x1, height: box.y2 - box.y1 }
         // await worker.loadLanguage('RTS_from_Cyrillic');
         // await worker.initialize('RTS_from_Cyrillic');
         await worker.setParameters({
@@ -1646,6 +1655,13 @@ function cutBoxByPoly(box, poly) {
         };
         newBoxes.push(newBox);
     }
+    // round box coordinates
+    newBoxes.forEach(function (element) {
+        element.x1 = Math.round(element.x1);
+        element.y1 = Math.round(element.y1);
+        element.x2 = Math.round(element.x2);
+        element.y2 = Math.round(element.y2);
+    });
     return newBoxes;
 }
 
@@ -1793,33 +1809,41 @@ $(document).ready(async function () {
             return;
         }
         if (event.layerType === 'polyline') {
+            setMainLoadingStatus(true);
+            setButtonsEnabledState(false);
             // if (event.layerType === 'polygon') {
             // cut all boxes by the polygon line
             var poly = event.layer;
-            var polyid = boxlayer.getLayerId(poly);
             var polybounds = poly.getBounds();
-            var polybox = new Box({
-                polyid: polyid,
-                text: '',
-                x1: Math.round(polybounds._southWest.lng),
-                y1: Math.round(polybounds._southWest.lat),
-                x2: Math.round(polybounds._northEast.lng),
-                y2: Math.round(polybounds._northEast.lat)
-            });
             var newboxes = [];
+            // delete set
+            var deleteBoxes = [];
             for (var i = 0; i < boxdata.length; i++) {
                 var box = boxdata[i];
                 var boxbounds = L.latLngBounds([box.y1, box.x1], [box.y2, box.x2]);
                 var intersection = polybounds.intersects(boxbounds);
                 if (intersection) {
                     var boxes = cutBoxByPoly(box, poly);
+                    deleteBoxes.push(box);
                     if (boxes.length > 0) {
                         newboxes = newboxes.concat(boxes);
                     }
                 }
             }
-            for (var i = 0; i < newboxes.length; i++) {
-                var newbox = new Box(newboxes[i]);
+            deleteBoxes.forEach(function (box) {
+                layer = boxlayer.getLayer(box.polyid);
+                boxlayer.removeLayer(layer);
+                deleteBox(box);
+            });
+            // for (var i = 0; i < newboxes.length; i++) {
+            // update all newboxes to Box objects in place
+            newboxes = newboxes.map(function (box) {
+                var newbox = new Box(box);
+                return newbox;
+            });
+
+            newboxes.forEach(function (newbox) {
+                // var newbox = new Box(box);
                 var newpoly = L.rectangle([[newbox.y1, newbox.x1], [newbox.y2, newbox.x2]]);
                 newpoly.on('edit', editRect);
                 newpoly.on('click', onRectClick);
@@ -1828,9 +1852,14 @@ $(document).ready(async function () {
                 var polyid = boxlayer.getLayerId(newpoly)
                 newbox.polyid = polyid;
                 boxdata.push(newbox);
-            }
+            });
+
+            redetectText(newboxes);
+            sortAllBoxes();
             updateProgressBar({ type: 'tagging' });
             updateSlider({ max: boxdata.length });
+            setMainLoadingStatus(false);
+            setButtonsEnabledState(true);
         }
     });
 

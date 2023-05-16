@@ -569,8 +569,8 @@ async function generateInitialBoxes(image) {
         gzip: false,
         logger: m => processWorkerLogMessage(m)
     });
-    await worker.loadLanguage('LATCYR_from_Cyrillic');
-    await worker.initialize('LATCYR_from_Cyrillic');
+    await worker.loadLanguage('RTS_from_Cyrillic');
+    await worker.initialize('RTS_from_Cyrillic');
     // await worker.loadLanguage(['osd', 'RTS_from_Cyrillic']);
     // await worker.initialize(['osd', 'RTS_from_Cyrillic']);
     // TODO: 06/04/2023 Continue setting parameters to discover columns and not assume single block.
@@ -968,6 +968,9 @@ function initializeSlider() {
                 }
             },
         });
+    // unbind keydown event from slider
+    $('.ui.slider').off('keydown.slider');
+    $(document).off('keydown.slider1');
 }
 
 function updateDownloadButtonsLabels(options = {}) {

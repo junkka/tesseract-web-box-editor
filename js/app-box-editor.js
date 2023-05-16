@@ -1,5 +1,7 @@
 const BoxFileType = Object.freeze({ "WORDSTR": 1, "CHAR_OR_LINE": 2 })
 const IgnoreEOFBox = true
+worker = null;
+
 var map
 var imageFileName;
 var imageFileNameForButton;
@@ -10,6 +12,7 @@ var lineIsDirty = false;
 var unicodeData;
 var imageIsProcessed = false;
 var recognizedLinesOfText = [];
+var image;
 var imageHeight;
 var imageWidth;
 var mapHeight;
@@ -110,8 +113,7 @@ var _URL = window.URL || window.webkitURL,
     imageLoaded = false,
     boxdataLoaded = false,
     selectedBox,
-    zoomMax = 1,
-    image;
+    zoomMax = 1;
 
 function getBoxFileType(boxContent) {
     var assumeWordStrFormat;
@@ -359,7 +361,8 @@ function deleteBoxFromResults(box) {
 }
 
 function onRectClick(event) {
-    console.log(event.target);
+    // console.log(event.target);
+    console.log("onRectClick", event.target._leaflet_id);
 
     // if editing is enabled, do nothing
     if (event.target.editing.enabled()) {
@@ -519,6 +522,31 @@ function processWorkerLogMessage(message) {
     } updateProgressBar(message);
 }
 
+async function redetectText() {
+    // boxdata.forEach(async function (box) {
+    //     rectangle = { left: box.x1, top: box.y1, width: box.x2 - box.x1, height: box.y2 - box.y1 }
+    //     await worker.setParameters({
+    //         tessedit_ocr_engine_mode: 1,
+    //         tessedit_pageseg_mode: 13,// 12
+    //     });
+    //     result = await worker.recognize(image._image, { rectangle })
+    //     box.text = result.data.text;
+    // });
+    for (i = 0; i < boxdata.length; i++) {
+        var box = boxdata[i];
+        // rectangle = { left: box.x1, top: box.y1, width: box.x2 - box.x1, height: box.y2 - box.y1 }
+        rectangle = { left: box.x1, top: imageHeight - box.y2, width: box.x2 - box.x1, height: box.y2- box.y1 }
+        // await worker.loadLanguage('RTS_from_Cyrillic');
+        // await worker.initialize('RTS_from_Cyrillic');
+        await worker.setParameters({
+            tessedit_ocr_engine_mode: 1,
+            tessedit_pageseg_mode: 1,// 12
+        });
+        result = await worker.recognize(image._image, { rectangle })
+        box.text = result.data.text;
+    }
+}
+
 async function generateInitialBoxes(image) {
     setMainLoadingStatus(true);
     displayMessage({ message: 'Generating initial boxes...' });
@@ -526,7 +554,8 @@ async function generateInitialBoxes(image) {
     boxlayer.clearLayers();
     boxdata = [];
 
-    const worker = await Tesseract.createWorker({
+    // const worker = await Tesseract.createWorker({
+    worker = await Tesseract.createWorker({
         langPath: '../../assets',
         gzip: false,
         logger: m => processWorkerLogMessage(m)
@@ -545,7 +574,7 @@ async function generateInitialBoxes(image) {
     });
     // const results = await worker.recognize(image, { left: image.width, top: image.height, width: 10, height: 10 });
     // run worker on half of the image
-    const rectangle = { left: 0, top: 0, width: image.width / 2, height: image.height }
+    // const rectangle = { left: 0, top: 0, width: image.width / 2, height: image.height/2 }
     const results = await worker.recognize(image);
     // const results = await worker.recognize(image, { rectangle });
     // await worker.terminate();
@@ -1026,9 +1055,14 @@ async function colorize(text) {
                 current_script = span_class;
             }
         } else {
-            colored_text += '</span>' + current_span + char;
-            current_span = '';
-            current_script = null;
+            span_class = 'other';
+            if (current_script == span_class) {
+                current_span += char;
+            } else {
+                colored_text += '</span>' + current_span; + char;
+                current_span = '<span class="' + span_class + '">' + char;
+                current_script = span_class;
+            }
         } isCapital = false;
     }
     colored_text += '</span>' + current_span;
@@ -1544,21 +1578,75 @@ function cutBoxByPoly(box, poly) {
     //     element.lat = imageHeight - element.lat;
     // });
     var boxFeature = turf.bboxPolygon([box.x1, box.y1, box.x2, box.y2]);
-    // for each segment of the polyline, find the intersection with the box
+    // for each segment of the polyline, find the intersection with the box. check if point is inside box. if so, add to list of points
     var splitLines = [];
     for (var i = 0; i < poly._latlngs.length - 1; i++) {
-        var line = L.polyline([poly._latlngs[i], poly._latlngs[i + 1]])
-        var intersection = turf.lineIntersect(boxFeature, line.toGeoJSON());
-        splitLines.push(intersection);
+        // var segmentPoints = [poly._latlngs[i], poly._latlngs[i + 1]];
+        var segmentPoints = [[poly._latlngs[i].lng, poly._latlngs[i].lat], [poly._latlngs[i + 1].lng, poly._latlngs[i + 1].lat]];
+        var j = i + 1;
+        // while point is inside box, keep adding points to segment
+        while (turf.booleanPointInPolygon([poly._latlngs[j].lng, poly._latlngs[j].lat], boxFeature) && j < poly._latlngs.length - 1) {
+            j++;
+            segmentPoints.push([poly._latlngs[j].lng, poly._latlngs[j].lat]);
+        }
+        var segmentFeature = turf.lineString(segmentPoints);
+        splitLines.push(segmentFeature);
+        i = j - 1;
     }
-    // var intersection = turf.lineIntersect(boxFeature, poly.toGeoJSON());
 
-    var clipped = turf.bboxClip(boxFeature, polyFeature);
-    if (clipped.geometry.coordinates.length == 0) {
-        return [];
+    // filter all segments that intersect the box
+    var intersectingLines = [];
+    splitLines.forEach(function (element) {
+        if (turf.booleanIntersects(element, boxFeature)) {
+            intersectingLines.push(element);
+        }
+    });
+
+    // for each intersecting segment, split the box
+    var boxGaps = [];
+    intersectingLines.forEach(function (element) {
+        // var intersection = turf.lineIntersect(boxFeature, element);
+        // if (element.geometry.coordinates.length == 3) {
+        //     intersection.features.push(turf.point(element.geometry.coordinates[1]));
+        // }
+        // var intersectionBox = turf.bbox(intersection);
+        // boxGaps.push(intersectionBox);
+        boxGaps.push(turf.envelope(element));
+    });
+
+    // for each gap, split the box
+    // union all box gaps
+    // if (boxGaps.length > 1) {
+    //     var gapUnion = turf.union(boxGaps[0], boxGaps[1]);
+    //     for (var i = 2; i < boxGaps.length; i++) {
+    //         gapUnion = turf.union(gapUnion, boxGaps[i]);
+    //     }
+    // }
+
+    // var difference = turf.difference(boxFeature, gapUnion);
+
+    var newBoxes = [];
+    var newEdges = [];
+    newEdges.push(box.x1);
+    // push all vertical edges of box gaps
+    boxGaps.forEach(function (element) {
+        newEdges.push(element.geometry.coordinates[0][0][0]);
+        newEdges.push(element.geometry.coordinates[0][2][0]);
+    });
+    newEdges.push(box.x2);
+    // sort edges
+    newEdges.sort(function (a, b) { return a - b });
+    // for each pair of edges, create a new box
+    for (var i = 0; i < newEdges.length - 1; i += 2) {
+        var newBox = {
+            x1: newEdges[i],
+            y1: box.y1,
+            x2: newEdges[i + 1],
+            y2: box.y2
+        };
+        newBoxes.push(newBox);
     }
-    var clippedBox = clipped.geometry.coordinates[0];
-    return [clippedBox[0][0], clippedBox[0][1], clippedBox[2][0], clippedBox[2][1]];
+    return newBoxes;
 }
 
 $(document).ready(async function () {
@@ -1705,7 +1793,7 @@ $(document).ready(async function () {
             return;
         }
         if (event.layerType === 'polyline') {
-        // if (event.layerType === 'polygon') {
+            // if (event.layerType === 'polygon') {
             // cut all boxes by the polygon line
             var poly = event.layer;
             var polyid = boxlayer.getLayerId(poly);
@@ -1724,17 +1812,18 @@ $(document).ready(async function () {
                 var boxbounds = L.latLngBounds([box.y1, box.x1], [box.y2, box.x2]);
                 var intersection = polybounds.intersects(boxbounds);
                 if (intersection) {
-                    var newbox = cutBoxByPoly(box, poly);
-                    if (newbox) {
-                        newboxes.push(newbox);
+                    var boxes = cutBoxByPoly(box, poly);
+                    if (boxes.length > 0) {
+                        newboxes = newboxes.concat(boxes);
                     }
                 }
             }
             for (var i = 0; i < newboxes.length; i++) {
-                var newbox = newboxes[i];
-                var newpoly = L.rectangle([[newbox.y1, newbox.x1], [newbox.y2, newbox.x2]], { color: 'red', weight: 2, fill: false });
+                var newbox = new Box(newboxes[i]);
+                var newpoly = L.rectangle([[newbox.y1, newbox.x1], [newbox.y2, newbox.x2]]);
                 newpoly.on('edit', editRect);
                 newpoly.on('click', onRectClick);
+                newpoly.setStyle(boxInactive);
                 boxlayer.addLayer(newpoly);
                 var polyid = boxlayer.getLayerId(newpoly)
                 newbox.polyid = polyid;

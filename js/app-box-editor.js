@@ -44,35 +44,31 @@ class Box {
         this.modified = false
     }
     static compare(a, b) {
-        var tolerance = 100;
+        var meanHeight = (a.y2 - a.y1 + b.y2 - b.y1) / 2;
+        var verticalDistance = a.y1 - b.y1;
+        var areOverlappingHorizontally = a.x1 <= b.x2 && a.x2 >= b.x1;
+        var tolerance = meanHeight; //100;
         var aCenterX = (a.x1 + a.x2) / 2;
         var aCenterY = (a.y1 + a.y2) / 2;
         var bCenterX = (b.x1 + b.x2) / 2;
         var bCenterY = (b.y1 + b.y2) / 2;
-        // check if at least one center is within the vertical distance of the other box
-        if ((aCenterY > b.y1 && aCenterY < b.y2) || (bCenterY > a.y1 && bCenterY < a.y2)) {
-            console.log("boxes " + a.text + " and " + b.text + " horizontally aligned");
-            if (aCenterX - bCenterX < 0) {
-                return -1;
-            } else {
-                return 1;
-            }
-        }
-        // check if at least one horizontal side is within the horizontal distance of the other box
-        if ((a.x1 > b.x1 - tolerance && a.x1 < b.x2 + tolerance) || (b.x1 > a.x1 - tolerance && b.x1 < a.x2 + tolerance)) {
-            // console.log("boxes " + a.text + " and " + b.text + " horizontally aligned");
-            if (aCenterY - bCenterY > 0) {
-                return -1;
-            } else {
-                return 1;
-            }
-        }
-        // console.log("boxes " + a.text + " and " + b.text + " are not close to each other");
-        if (aCenterX - bCenterX < 0) {
+
+        if (a.x2 <= b.x1 + tolerance){// && verticalDistance < 2*meanHeight && verticalDistance < 0) {
+            return -1;
+        } else if (a.y1 > b.y2 && areOverlappingHorizontally && verticalDistance > 2*meanHeight) {
+            return -1;
+        } else if (a.y1 > b.y2) {
             return -1;
         } else {
             return 1;
         }
+
+        // // console.log("boxes " + a.text + " and " + b.text + " are not close to each other");
+        // if (aCenterX - bCenterX < 0) {
+        //     return -1;
+        // } else {
+        //     return 1;
+        // }
     }
     // compare function for .equals
     equals(other) {
@@ -322,9 +318,9 @@ async function editRect(e) {
 
     // new dimensions
     var newDimenstions = [newd.x1, newd.y1, newd.x2, newd.y2];
-    console.log("moved box ", [
-        box.polyid, box.text
-    ], " from ", oldDimenstions, " to ", newDimenstions);
+    // console.log("moved box ", [
+    //     box.polyid, box.text
+    // ], " from ", oldDimenstions, " to ", newDimenstions);
     if (lineWasDirty) {
         newd.text = $('#formtxt').val();
     }
@@ -553,6 +549,8 @@ async function redetectText(rectList) {
         });
         result = await worker.recognize(image._image, { rectangle })
         box.text = result.data.text;
+        // remove newlines
+        box.text = box.text.replace(/(\r\n|\n|\r)/gm, "");
     }
 }
 
@@ -588,6 +586,10 @@ async function generateInitialBoxes(image) {
     // const results = await worker.recognize(image, { rectangle });
     // await worker.terminate();
     recognizedLinesOfText = results.data.lines;
+    // remove newlines
+    recognizedLinesOfText.forEach(function (line) {
+        line.text = line.text.replace(/(\r\n|\n|\r)/gm, "");
+    });
     await insertSuggestions($('.ui.include-suggestions.checkbox').checkbox('is checked'));
     setMainLoadingStatus(false);
     setButtonsEnabledState(true);
@@ -994,8 +996,8 @@ function sortAllBoxes() {
     // repead three times to make sure that the boxes are sorted correctly
     // I don't know why this is necessary, but it is 🤷‍♂️
     boxdata.sort(Box.compare);
-    boxdata.sort(Box.compare);
-    boxdata.sort(Box.compare);
+    // boxdata.sort(Box.compare);
+    // boxdata.sort(Box.compare);
 }
 
 // Define regular expressions
@@ -1130,7 +1132,7 @@ var zoomControl = new L.Control.Zoom({ position: 'topright' });
 
 var drawControl = new L.Control.Draw({
     draw: {
-        polygon: true,
+        polygon: false,
         marker: false,
         circle: false,
         polyline: true,
@@ -1205,7 +1207,7 @@ async function setMapSize(options) {
         var mapHeight = $('#mapid').height();
         var mapWidth = $('#mapid').width();
         var mapAspectRatio = mapWidth / mapHeight;
-        console.log(imageAspectRatio, mapAspectRatio);
+        // console.log(imageAspectRatio, mapAspectRatio);
         if (imageAspectRatio > .5) {
             var newHeight = mapWidth * imageAspectRatio;
             var newHeight = imageHeight / 2;
@@ -1502,6 +1504,10 @@ async function downloadBoxFile(e) {
     sortAllBoxes()
     var fileExtension = '.box'
     var content = '';
+    // remove newlines from text
+    $.each(boxdata, function () {
+        this.text = this.text.replace(/(\r\n|\n|\r)/gm, "");
+    })
     if (boxFileType == BoxFileType.CHAR_OR_LINE) {
         $.each(boxdata, function () {
             content = content + this.text + ' ' + this.x1 + ' ' + this.y1 + ' ' + this.x2 + ' ' + this.y2 + ' 0\n'
@@ -1535,6 +1541,10 @@ async function downloadGroundTruth(e) {
     sortAllBoxes()
     var fileExtension = '.gt.txt'
     var content = '';
+    // remove newlines from text
+    $.each(boxdata, function () {
+        this.text = this.text.replace(/(\r\n|\n|\r)/gm, "");
+    })
     if (boxFileType == BoxFileType.CHAR_OR_LINE) {
         $.each(boxdata, function () {
             content = content + this.text + '\n'

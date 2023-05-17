@@ -98,48 +98,70 @@
         </div>
       </div>
     </div>
-    <div class="ui secondary segment">
-      <div class="ui two column stackable grid">
-        <div class="eight wide column">
-          <h4 class="ui dividing header">Upload Documents</h4>
-          <form class="ui form">
-            <div class="two fields">
-              <div class="field">
-                <label for="imageFile">Image</label>
-                <input class="form-control" type="file" disabled id="imageFile" name="imageFile" accept="image/*" />
+    <div class="ui segments">
+      <div class="ui secondary segment">
+        <div class="ui two column stackable grid">
+          <div class="eight wide column">
+            <h4 class="ui dividing header">Upload Documents</h4>
+            <form class="ui form">
+              <div class="two fields">
+                <div class="field">
+                  <label for="imageFile">Image</label>
+                  <input class="form-control" type="file" disabled id="imageFile" name="imageFile" accept="image/*" />
+                </div>
+                <div class="field">
+                  <label for="boxFile">Box File</label>
+                  <input class="form-control" type="file" disabled id="boxFile" name="boxFile" accept=".box" />
+                </div>
               </div>
-              <div class="field">
-                <label for="boxFile">Box File</label>
-                <input class="form-control" type="file" disabled id="boxFile" name="boxFile" accept=".box" />
+            </form>
+          </div>
+          <div class="eight wide column">
+            <h4 class="ui dividing header">Download Documents</h4>
+            <form class="ui equal width form">
+              <div class="two fields">
+                <div class="field">
+                  <label for="download">Box File</label>
+                  <button id="downloadBoxFileButton" name="download" tabindex="0" class="disabled fluid ui button">
+                    <i class="download icon"></i>
+                    Download
+                  </button>
+                </div>
+                <div class="field">
+                  <label for="download">Ground Truth</label>
+                  <button id="downloadGroundTruthButton" name="download" tabindex="0" class="disabled fluid ui button">
+                    <i class="download icon"></i>
+                    Download
+                  </button>
+                </div>
               </div>
-            </div>
-          </form>
-        </div>
-        <div class="eight wide column">
-          <h4 class="ui dividing header">Download Documents</h4>
-          <form class="ui equal width form">
-            <div class="two fields">
-              <div class="field">
-                <label for="download">Box File</label>
-                <button id="downloadBoxFileButton" name="download" tabindex="0" class="disabled fluid ui button">
-                  <i class="download icon"></i>
-                  Download
-                </button>
-              </div>
-              <div class="field">
-                <label for="download">Ground Truth</label>
-                <button id="downloadGroundTruthButton" name="download" tabindex="0" class="disabled fluid ui button">
-                  <i class="download icon"></i>
-                  Download
-                </button>
-              </div>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
-      <div class="ui include-suggestions toggle checkbox">
-        <input type="checkbox" tabindex="0">
-        <label>Include Suggestions <span class="ui warning text">beta</span></label>
+      <div class="ui secondary compact segment">
+        <div class="ui form">
+          <div class="inline fields">
+            <div class="field">
+              <div class="ui include-suggestions toggle checkbox">
+                <input type="checkbox" tabindex="0">
+                <label>Include Suggestions <span class="ui warning text">beta</span></label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="ui tiny toggle checkbox">
+                <input type="checkbox">
+                <label>Toggle</label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="ui tiny slider checkbox">
+                <input type="checkbox">
+                <label>Slider</label>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div id="taggingSegment" class="ui disable secondary segment">

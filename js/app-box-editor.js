@@ -44,32 +44,47 @@ class Box {
         this.modified = false
     }
     static compare(a, b) {
-        var meanHeight = (a.y2 - a.y1 + b.y2 - b.y1) / 2;
-        var verticalDistance = a.y1 - b.y1;
-        var areOverlappingHorizontally = a.x1 <= b.x2 && a.x2 >= b.x1;
-        var tolerance = meanHeight; //100;
-        var aCenterX = (a.x1 + a.x2) / 2;
-        var aCenterY = (a.y1 + a.y2) / 2;
-        var bCenterX = (b.x1 + b.x2) / 2;
-        var bCenterY = (b.y1 + b.y2) / 2;
+        // Check if ranges of x-coordinates overlap
+        const xOverlap = a.x1 <= b.x2 && b.x1 <= a.x2;
 
-        if (a.x2 <= b.x1 + tolerance){// && verticalDistance < 2*meanHeight && verticalDistance < 0) {
+        // Check if line segment a is below line segment b
+        const below = a.y1 >= b.y2;
+
+        // Check if line segment a is entirely to the left of line segment b
+        const left = a.x2 <= b.x1;
+
+        // Check if there exists a line segment c that overlaps both a and b
+        const cOverlap = (c) => c.x1 <= a.x2 && a.x1 <= c.x2 && c.x1 <= b.x2 && b.x1 <= c.x2;
+
+        // Check if line segment a overflows to the next line (line segment b)
+        const aOverflows = a.y1 === b.y2 && xOverlap;
+
+        // Rule 1: Line segment a comes before line segment b
+        // if their ranges of x-coordinates overlap and if a is below b
+        if (xOverlap && below) {
             return -1;
-        } else if (a.y1 > b.y2 && areOverlappingHorizontally && verticalDistance > 2*meanHeight) {
-            return -1;
-        } else if (a.y1 > b.y2) {
-            return -1;
-        } else {
-            return 1;
         }
 
-        // // console.log("boxes " + a.text + " and " + b.text + " are not close to each other");
-        // if (aCenterX - bCenterX < 0) {
-        //     return -1;
-        // } else {
-        //     return 1;
-        // }
+        // Rule 2: Line segment a comes before line segment b
+        // if a is entirely to the left of b and no line segment c overlaps both a and b
+        if (left && !cOverlap(a) && !cOverlap(b)) {
+            return -1;
+        }
+
+        // Rule 3: Line segment a comes before line segment b
+        // if line segment a overflows to the next line (line segment b)
+        if (aOverflows) {
+            return -1;
+        }
+
+        // In all other cases, line segment b comes before line segment a
+        return 1;
     }
+
+
+
+
+
     // compare function for .equals
     equals(other) {
         return this.text == other.text && this.x1 == other.x1 && this.y1 == other.y1 && this.x2 == other.x2 && this.y2 == other.y2
@@ -794,7 +809,11 @@ function updateProgressBar(options = {}) {
     }
     if (options.type == 'tagging') {
         var currentPosition = boxdata.indexOf(selectedBox);
-        updateSlider({ value: currentPosition + 1 });
+        if ($('.ui.slider').slider('get max')[0] != boxdata.length) {
+            updateSlider({ value: currentPosition + 1, max: boxdata.length });
+        } else {
+            updateSlider({ value: currentPosition + 1 });
+        }
         // $('.ui.slider').slider('set value', currentPosition + 1);
         // set max value
         // $('.ui.slider').slider('setting', 'max', boxdata.length);

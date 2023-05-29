@@ -1948,7 +1948,7 @@ function showCharInfoPopup(e) { // prevent modifier keys from triggering popup
         // apply style to popup
         // max-height: 40em;overflow: scroll;
         $('#updateTxt').popup('get popup').css('max-height', '20em');
-        $('#updateTxt').popup('get popup').css('overflow', 'scroll');
+        $('#updateTxt').popup('get popup').css('overflow', 'visible');
         $('#updateTxt').popup('get popup').css('scrollbar-width', 'none');
         $('#updateTxt').popup('get popup').css('scrollbar-width', 'none');
         $('#updateTxt').popup('get popup').css('-ms-overflow-style', 'none');

@@ -812,7 +812,7 @@ function updateProgressBar(options = {}) {
     }
     if (options.type == 'tagging') {
         var currentPosition = boxdata.indexOf(selectedBox);
-        if ($('.ui.slider').slider('get max')[0] != boxdata.length) {
+        if ($('.ui.slider').slider('get max') != boxdata.length) {
             updateSlider({ value: currentPosition + 1, max: boxdata.length });
         } else {
             updateSlider({ value: currentPosition + 1 });

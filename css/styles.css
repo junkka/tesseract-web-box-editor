@@ -77,7 +77,11 @@ span.latin.capital {
 
 span.space {
   /* color: transparent; */
-  opacity: 0.2;
+  opacity: 0.3;
+}
+span.space.multiple {
+  /* color: #ff0000; */
+  opacity: 0.6;
 }
 
 /* span.space::before {

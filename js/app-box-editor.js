@@ -1065,6 +1065,8 @@ async function colorize(text) {
             span_class = 'space';
             if (current_script == 'space') {
                 // current_span += '&nbsp;';
+                // replace 'space' with 'space multiple' in current_span
+                current_span = current_span.replace('space', 'space multiple');
                 current_span += '·';
             } else {
                 colored_text += '</span>' + current_span;

@@ -19,6 +19,7 @@ var mapHeight;
 var mapDeletingState = false;
 var mapEditingState = false;
 var currentSliderPosition = -1;
+var showInvisibles = false;
 
 class Box {
     constructor({
@@ -29,7 +30,7 @@ class Box {
         y2,
         polyid,
         visited = false,
-        verified = false
+        committed = false,
     }) {
         this.text = text
         this.x1 = x1
@@ -40,7 +41,6 @@ class Box {
         // ternary operator to set default value
         this.filled = text != "" ? true : false
         this.visited = visited
-        this.verified = verified
         this.modified = false
     }
     static compare(a, b) {
@@ -108,7 +108,7 @@ boxInactive = {
     opacity: 0.5,
     fillOpacity: 0.3
 }
-boxVisited = {
+boxComitted = {
     color: 'green',
     stroke: false,
     fillOpacity: 0.3
@@ -199,7 +199,7 @@ function setStyle(rect) {
 
 function removeStyle(rect, modified = false) {
     if (rect && modified) {
-        rect.setStyle(boxVisited)
+        rect.setStyle(boxComitted)
     } else if (rect) {
         rect.setStyle(boxInactive)
     }
@@ -311,7 +311,7 @@ function processFile(e) {
         map.addLayer(boxlayer);
 
 
-        $('#formrow').removeClass('hidden');
+        // $('#formrow').removeClass('hidden');
         sortAllBoxes();
         // select next BB
         var nextBB = getNextBB();
@@ -333,6 +333,7 @@ async function editRect(e) {
     })
     var lineWasDirty = lineIsDirty;
     await updateBoxdata(layer._leaflet_id, newd);
+    setFromData(newd);
 
     // new dimensions
     var newDimenstions = [newd.x1, newd.y1, newd.x2, newd.y2];
@@ -460,7 +461,8 @@ function submitText(e) {
         x1: parseInt($('#x1').val()),
         y1: parseInt($('#y1').val()),
         x2: parseInt($('#x2').val()),
-        y2: parseInt($('#y2').val())
+        y2: parseInt($('#y2').val()),
+        committed: true,
     })
     var modified = updateBoxdata(polyid, newdata)
     updateRect(polyid, newdata)
@@ -542,6 +544,35 @@ function processWorkerLogMessage(message) {
     } updateProgressBar(message);
 }
 
+async function regenerateTextSuggestions() {
+    $("#regenerateTextSuggestions").addClass("double loading");
+    await redetectText(boxdata);
+    // get box by id
+    var el = boxdata.findIndex(function (x) {
+        return x.polyid == selectedBox.polyid;
+    });
+    setFromData(boxdata[el]);
+    $("#regenerateTextSuggestions").removeClass("double loading");
+    // set styles for all boxes using setStyle(boxInactive);
+    for (let box of boxlayer.getLayers()) {
+        box.setStyle(boxInactive);
+    }
+    focusBoxID(selectedBox.polyid);
+    // sortAllBoxes();
+}
+async function regenerateTextSuggestionForSelectedBox() {
+    $("#regenerateTextSuggestionForSelectedBox").addClass("double loading");
+    var newValues = await redetectText([selectedBox]);
+    // get box by id
+    var el = boxdata.findIndex(function (x) {
+        return x.polyid == selectedBox.polyid;
+    });
+    boxdata[el].text = newValues[0].text;
+    setFromData(boxdata[el]);
+    $("#regenerateTextSuggestionForSelectedBox").removeClass("double loading");
+    // sortAllBoxes();
+}
+
 async function redetectText(rectList) {
     // boxdata.forEach(async function (box) {
     //     rectangle = { left: box.x1, top: box.y1, width: box.x2 - box.x1, height: box.y2 - box.y1 }
@@ -554,6 +585,8 @@ async function redetectText(rectList) {
     // });
     if (rectList.length == 0) {
         rectList = boxdata;
+    } else {
+        var returnBoxes = true;
     }
     for (i = 0; i < rectList.length; i++) {
         var box = rectList[i];
@@ -569,6 +602,11 @@ async function redetectText(rectList) {
         box.text = result.data.text;
         // remove newlines
         box.text = box.text.replace(/(\r\n|\n|\r)/gm, "");
+        box.committed = false;
+        box.visited = false;
+    }
+    if (returnBoxes) {
+        return rectList
     }
 }
 
@@ -611,7 +649,7 @@ async function generateInitialBoxes(image) {
     await insertSuggestions($('.ui.include-suggestions.checkbox').checkbox('is checked'));
     setMainLoadingStatus(false);
     setButtonsEnabledState(true);
-    $('#formrow').removeClass('hidden');
+    // $('#formrow').removeClass('hidden');
     // select next BB
     var nextBB = getNextBB();
     fillAndFocusRect(nextBB);
@@ -1036,6 +1074,7 @@ async function colorize(text) {
     var current_script = null;
     var current_span = '';
     var span_class = '';
+    charSpace = showInvisibles ? '·' : '&nbsp;';
     for (var i = 0; i < text.length; i++) {
         var isCapital = false;
         var char = text.charAt(i);
@@ -1070,11 +1109,11 @@ async function colorize(text) {
                 // current_span += '&nbsp;';
                 // replace 'space' with 'space multiple' in current_span
                 current_span = current_span.replace('space', 'space multiple');
-                current_span += '·';
+                current_span += charSpace;
             } else {
                 colored_text += '</span>' + current_span;
                 // current_span = '<span class="' + span_class + '">' + '&nbsp;';
-                current_span = '<span class="' + span_class + '">' + '·';
+                current_span = '<span class="' + span_class + '">' + charSpace;
                 current_script = span_class;
             }
         } else if (latin_pattern.test(char)) {
@@ -1513,6 +1552,19 @@ function getUnicodeData(code) {
     return result;
 }
 
+async function toggleInvisibles(e) {
+    if (e) {
+        e.preventDefault();
+    }
+    showInvisibles = !showInvisibles;
+    // toggle active class for button
+    $("#invisiblesToggle").toggleClass('active')
+    updateBackground();
+
+    // save cookie for invisibles
+    Cookies.set('show-invisibles', showInvisibles);
+}
+
 async function downloadBoxFile(e) {
     if (e) {
         e.preventDefault();
@@ -1750,15 +1802,17 @@ $(document).ready(async function () {
         $('.ui.include-suggestions.toggle.checkbox').checkbox('uncheck');
     }
 
+    Cookies.get('show-invisibles') == "true" ? toggleInvisibles() : null;
+
     // save cookie for checkbox
     $('.ui.include-suggestions.toggle.checkbox').checkbox({
         onChecked: function () {
             Cookies.set('include-suggestions', 'true');
-            insertSuggestions(true);
+            // insertSuggestions(true);
         },
         onUnchecked: function () {
             Cookies.set('include-suggestions', 'false');
-            insertSuggestions(false);
+            // insertSuggestions(false);
         }
     });
 
@@ -1905,6 +1959,9 @@ $(document).ready(async function () {
     $('#previousBB').on('click', getPrevAndFill);
     $("#downloadBoxFileButton").on("click", downloadBoxFile);
     $('#downloadGroundTruthButton').on("click", downloadGroundTruth);
+    $('#invisiblesToggle').on("click", toggleInvisibles);
+    $('#regenerateTextSuggestions').on("click", regenerateTextSuggestions);
+    $('#regenerateTextSuggestionForSelectedBox').on("click", regenerateTextSuggestionForSelectedBox);
 
     await $.ajax({
         url: '../../assets/unicodeData.csv',

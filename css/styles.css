@@ -39,9 +39,9 @@ $('#updateTxt').popup('get popup').css('scrollbar-width', 'none'); */
   white-space: nowrap;
 }
 
-.hidden {
+/* .hidden {
   display: none;
-}
+} */
 
 .center {
   text-align: center;
@@ -56,6 +56,11 @@ $('#updateTxt').popup('get popup').css('scrollbar-width', 'none'); */
   display: none;
 }
 
+/* Custom Controls */
+#custom-controls.ui.form .inline.fields {
+  margin-bottom: 0;
+}
+
 /* Define styles for colorized text */
 span.cyrillic {
   color: #db2828;
@@ -64,7 +69,6 @@ span.cyrillic {
 span.latin {
   color: #2185d0;
 }
-
 
 /* Captial letters lighter */
 span.cyrillic.capital {

@@ -140,7 +140,7 @@
         </div>
       </div>
       <div class="ui secondary compact segment">
-        <div class="ui form">
+        <div id="custom-controls" class="ui form">
           <div class="inline fields">
             <div class="field">
               <div class="ui include-suggestions toggle checkbox">
@@ -149,15 +149,9 @@
               </div>
             </div>
             <!-- <div class="field">
-              <div class="ui tiny toggle checkbox">
-                <input type="checkbox">
-                <label>Toggle</label>
-              </div>
-            </div>
-            <div class="field">
-              <div class="ui tiny slider checkbox">
-                <input type="checkbox">
-                <label>Slider</label>
+              <div class="ui include-suggestions toggle checkbox">
+                <input type="checkbox" tabindex="0">
+                <label>Include Suggestions <span class="ui warning text">beta</span></label>
               </div>
             </div> -->
           </div>
@@ -165,6 +159,48 @@
       </div>
     </div>
     <div id="taggingSegment" class="ui disable secondary segment">
+      <div id="custom-controls" class="ui form">
+        <div class="inline fields">
+          <div class="field">
+            <button id="invisiblesToggle" name="invisiblesToggle" class="ui compact icon button" title="Toggle Invisibles"
+            tabindex="0">
+            <i class="paragraph icon"></i>
+          </button>
+        </div>
+        <div class="field">
+          <button id="regenerateTextSuggestions" name="regenerateTextSuggestions" class="ui compact icon button"
+            title="Regenerate Text Suggestions" tabindex="0">
+            <i class="sync icon"></i>
+          </button>
+        </div>
+        <div class="field">
+          <button id="regenerateTextSuggestionForSelectedBox" name="regenerateTextSuggestionForSelectedBox" class="ui compact icon button"
+            title="Regenerate Text Suggestion for Selected Box" tabindex="0">
+            <i class="redo icon"></i>
+          </button>
+        </div>
+          <!-- <div class="field">
+                    <div class="ui animated fade button" tabindex="0">
+                      <div class="hidden content">Invisibles</div>
+                      <div class="visible content">
+                          <i class="paragraph icon"></i>
+                      </div>
+                    </div>
+                  </div> -->
+          <!-- <div class="field">
+                    <div class="ui tiny toggle checkbox">
+                      <input type="checkbox">
+                      <label>Toggle</label>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <div class="ui tiny slider checkbox">
+                      <input type="checkbox">
+                      <label>Slider</label>
+                    </div>
+                  </div> -->
+        </div>
+      </div>
       <div id="main-edit-area" class="ui basic fitted segment">
         <!-- <div class="ui top attached progress" id="positionProgress">
           <div class="bar"></div>

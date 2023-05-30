@@ -44,11 +44,14 @@ class Box {
         this.modified = false
     }
     static compare(a, b) {
+        // set tolerance to account for vertically overlapping boxes as a percentage of height
+        const tolerance = 0.5; // 0.25 = 25%
+
         // Check if ranges of x-coordinates overlap
         const xOverlap = a.x1 <= b.x2 && b.x1 <= a.x2;
 
         // Check if line segment a is below line segment b
-        const below = a.y1 >= b.y2;
+        const below = a.y1 > b.y2 - tolerance * (b.y2 - b.y1);
 
         // Check if line segment a is entirely to the left of line segment b
         const left = a.x2 <= b.x1;

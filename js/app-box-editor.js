@@ -2,6 +2,89 @@ const BoxFileType = Object.freeze({ "WORDSTR": 1, "CHAR_OR_LINE": 2 })
 const IgnoreEOFBox = true
 worker = null;
 
+var appSettings = {
+    interface: {
+        appearance: "match-device",
+        toolbarActions: {
+            detectAllLines: false,
+            detectSelectedBox: true,
+            detectAllBoxes: false,
+            showInvisibleChars: false,
+        },
+        imageView: "medium",
+    },
+    behavior: {
+        onImageLoad: {
+            detectAllLines: true,
+            includeTextForDetectedLines: true,
+        },
+        alerting: {
+            alertLoadBoxFileDifference: true,
+            alertUncommittedChanges: true,
+        },
+    },
+};
+
+// Function to update the cookie with the current settings
+function updateCookie() {
+    Cookies.set("appSettings", JSON.stringify(appSettings));
+}
+
+// Update appSettings based on user modifications
+function updateAppSettings({ path, value, cookie }) {
+    if (cookie) {
+        appSettings = { ...appSettings, ...cookie };
+        updateSettingsModal();
+    } else {
+        const pathArray = path.split(".");
+        let obj = appSettings;
+        for (let i = 0; i < pathArray.length - 1; i++) {
+            obj = obj[pathArray[i]];
+        }
+        // displayMessage({ title: "Settings updated!", type: "info", message: `Path: ${path}, value: ${value}, previous value: ${obj[pathArray[pathArray.length - 1]]}.` });
+        obj[pathArray[pathArray.length - 1]] = value;
+        updateCookie();
+    }
+}
+
+
+
+// Update settings modal to reflect the current settings
+function updateSettingsModal() {
+    // Toolbar actions
+    for (const [key, value] of Object.entries(appSettings.interface.toolbarActions)) {
+        const path = `interface.toolbarActions.${key}`;
+        document.querySelector(`input[name='${path}']`).checked = value;
+    }
+    // Appearance
+    const appearancePath = "interface.appearance";
+    document.querySelector(`input[name='${appearancePath}'][value='${appSettings.interface.appearance}']`).checked = true;
+    // Image view
+    const imageViewPath = "interface.imageView";
+    document.querySelector(`input[name='${imageViewPath}'][value='${appSettings.interface.imageView}']`).checked = true;
+    // On image load
+    for (const [key, value] of Object.entries(appSettings.behavior.onImageLoad)) {
+        const path = `behavior.onImageLoad.${key}`;
+        document.querySelector(`input[name='${path}']`).checked = value;
+    }
+    // Alerting
+    for (const [key, value] of Object.entries(appSettings.behavior.alerting)) {
+        const path = `behavior.alerting.${key}`;
+        document.querySelector(`input[name='${path}']`).checked = value;
+    }
+}
+
+// Listen for changes to the settings and update the appSettings object and the cookie accordingly
+document.addEventListener("change", function (event) {
+    // const inputs = document.querySelectorAll("input[type='checkbox'], input[type='radio'], input[type='text']");
+    // inputs.forEach((input) => {
+    //     input.addEventListener("change", (event) => {
+    const path = event.target.name;
+    const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
+    updateAppSettings({ path: path, value: value });
+});
+// });
+
 var map
 var imageFileName;
 var imageFileNameForButton;
@@ -20,6 +103,7 @@ var mapDeletingState = false;
 var mapEditingState = false;
 var currentSliderPosition = -1;
 var showInvisibles = false;
+
 
 class Box {
     constructor({
@@ -1754,6 +1838,80 @@ function cutBoxByPoly(box, poly) {
     return newBoxes;
 }
 
+
+
+function downloadFile(content, fileExtension) {
+    var element = document.createElement('a');
+    element.href = 'data:application/text;charset=utf-8,' + encodeURIComponent(content);
+    element.download = imageFileName + fileExtension;
+    element.target = '_blank';
+    element.style.display = 'none';
+
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    displayMessage({
+        message: 'Downloaded ' + imageFileName + fileExtension,
+        type: 'success'
+    });
+    boxdataIsDirty = false;
+}
+
+function showCharInfoPopup(e) { // prevent modifier keys from triggering popup
+    if (e.ctrlKey || e.altKey || e.metaKey || e.keyCode == 13) {
+        return;
+    }
+    if (e.keyCode == 13) {
+        $('#updateTxt').popup('hide');
+        return;
+    }
+    var selection;
+
+    if (window.getSelection) {
+        selection = window.getSelection();
+    } else if (document.selection) {
+        selection = document.selection.createRange();
+    }
+    // firefox fix
+    if (selection.toString().length == 0) {
+        var input = document.getElementById('formtxt');
+        var startPos = input.selectionStart;
+        var endPos = input.selectionEnd;
+        selection = input.value.substring(startPos, endPos);
+    }
+    results = getUnicodeInfo(selection.toString());
+    // TODO: replace max length with a programmatic solution
+    if (results.length == 0 || results.length > 15) {
+        $('#updateTxt').popup('hide');
+        return;
+    } else {
+        formatted = formatForPopup(results);
+        // apply style to popup
+        // max-height: 40em;overflow: scroll;
+        $('#updateTxt').popup('get popup').css('max-height', '20em');
+        $('#updateTxt').popup('get popup').css('overflow', 'visible');
+        $('#updateTxt').popup('get popup').css('scrollbar-width', 'none');
+        $('#updateTxt').popup('get popup').css('scrollbar-width', 'none');
+        $('#updateTxt').popup('get popup').css('-ms-overflow-style', 'none');
+        // apply popup scrollbar for webkit
+        $('#updateTxt').popup('get popup').css('scrollbar-width', 'none');
+
+        if ($('#updateTxt').popup('is visible')) {
+            $('#updateTxt').popup('change content (html)', formatted)
+        } else if ($('#updateTxt').popup('is hidden')) {
+            $('#updateTxt').popup({ on: 'manual', 'html': formatted }).popup('show')
+        } else {
+            console.log('error with char info popup');
+        }
+    }
+}
+
+function settingsPopup() {
+    $('.ui.settings.modal')
+        .modal('show')
+        ;
+}
+
 $(document).ready(async function () {
     colorizedFields = [];
     colorizedFields.push($('#myInputBackground')[0]);
@@ -1793,7 +1951,13 @@ $(document).ready(async function () {
         $('#myInputBackground').removeClass('focused');
     });
 
-    $('.ui.checkbox').checkbox();
+    $('.ui.checkbox').checkbox(
+        // {
+        //     onChecked: function () {
+        //         displayMessage({ message: 'onChecked called<br>' });
+        //     }
+        // }
+    );
 
     // set checkbox from cookie
     if (Cookies.get('include-suggestions') == 'true') {
@@ -1962,6 +2126,7 @@ $(document).ready(async function () {
     $('#invisiblesToggle').on("click", toggleInvisibles);
     $('#regenerateTextSuggestions').on("click", regenerateTextSuggestions);
     $('#regenerateTextSuggestionForSelectedBox').on("click", regenerateTextSuggestionForSelectedBox);
+    $('#settingsButton').on("click", settingsPopup);
 
     await $.ajax({
         url: '../../assets/unicodeData.csv',
@@ -1977,71 +2142,16 @@ $(document).ready(async function () {
 
     $('#formtxt').bind('mouseup', showCharInfoPopup);
     $('#formtxt').bind('keyup', showCharInfoPopup);
+
+
+
+    $('#settingsMenu .item')
+        .tab()
+        ;
+    $('.ui.settings.modal')
+        .modal({
+            blurring: true
+        })
+    cookieSettings = JSON.parse(Cookies.get("appSettings"));
+    updateAppSettings({ cookie: cookieSettings });
 });
-
-
-function downloadFile(content, fileExtension) {
-    var element = document.createElement('a');
-    element.href = 'data:application/text;charset=utf-8,' + encodeURIComponent(content);
-    element.download = imageFileName + fileExtension;
-    element.target = '_blank';
-    element.style.display = 'none';
-
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    displayMessage({
-        message: 'Downloaded ' + imageFileName + fileExtension,
-        type: 'success'
-    });
-    boxdataIsDirty = false;
-}
-
-function showCharInfoPopup(e) { // prevent modifier keys from triggering popup
-    if (e.ctrlKey || e.altKey || e.metaKey || e.keyCode == 13) {
-        return;
-    }
-    if (e.keyCode == 13) {
-        $('#updateTxt').popup('hide');
-        return;
-    }
-    var selection;
-
-    if (window.getSelection) {
-        selection = window.getSelection();
-    } else if (document.selection) {
-        selection = document.selection.createRange();
-    }
-    // firefox fix
-    if (selection.toString().length == 0) {
-        var input = document.getElementById('formtxt');
-        var startPos = input.selectionStart;
-        var endPos = input.selectionEnd;
-        selection = input.value.substring(startPos, endPos);
-    }
-    results = getUnicodeInfo(selection.toString());
-    // TODO: replace max length with a programmatic solution
-    if (results.length == 0 || results.length > 15) {
-        $('#updateTxt').popup('hide');
-        return;
-    } else {
-        formatted = formatForPopup(results);
-        // apply style to popup
-        // max-height: 40em;overflow: scroll;
-        $('#updateTxt').popup('get popup').css('max-height', '20em');
-        $('#updateTxt').popup('get popup').css('overflow', 'visible');
-        $('#updateTxt').popup('get popup').css('scrollbar-width', 'none');
-        $('#updateTxt').popup('get popup').css('scrollbar-width', 'none');
-        $('#updateTxt').popup('get popup').css('-ms-overflow-style', 'none');
-        // apply popup scrollbar for webkit
-        $('#updateTxt').popup('get popup').css('scrollbar-width', 'none');
-
-        if ($('#updateTxt').popup('is visible')) {
-            $('#updateTxt').popup('change content (html)', formatted)
-        } else if ($('#updateTxt').popup('is hidden')) {
-            $('#updateTxt').popup({ on: 'manual', 'html': formatted }).popup('show')
-        } else {
-            console.log('error with char info popup');
-        }
-    }
-}

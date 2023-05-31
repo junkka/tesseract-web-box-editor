@@ -6,6 +6,10 @@
   width: 100%;
 }
 
+.ui.settings.modal > .content{
+  height: 30rem
+}
+
 .ui.vertical.divider {
   left: 62.5%;
 }
@@ -110,12 +114,12 @@ span.space.multiple {
   font-kerning: none;
 }
 
-div.ui.mini.red.empty.circular.label {
+div.ui.mini.red.empty.circular.label.text-highlighter {
   background: linear-gradient(to bottom, #e66a6a 50%, #db2828 50%);
   border-radius: 7000;
 }
 
-div.ui.mini.blue.empty.circular.label {
+div.ui.mini.blue.empty.circular.label.text-highlighter {
   background: linear-gradient(to bottom, #59a9e5 50%, #2185d0 50%);
   border-radius: 7000;
 }

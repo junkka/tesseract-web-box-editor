@@ -64,7 +64,7 @@
             Words Pairing
           </a>
           <div class="item">
-            <i class="large question circle icon"></i>
+            <i class="large fitted question circle icon"></i>
             <div class="ui fixed very wide popup">
               <div class="header">Welcome!</div>
               <div class="content">
@@ -95,6 +95,9 @@
               </div>
             </div>
           </div>
+          <a id="settingsButton" class="item">
+            <i class="large fitted cog circle icon"></i>
+          </a>
         </div>
       </div>
     </div>
@@ -117,7 +120,10 @@
             </form>
           </div>
           <div class="eight wide column">
-            <h4 class="ui dividing header">Download Documents</h4>
+            <h4 class="ui dividing header">
+              Download Documents
+              <div id="unsavedChanges" class="ui hidden mini red empty circular label" title="You have unsaved changes."></div>
+            </h4>
             <form class="ui equal width form">
               <div class="two fields">
                 <div class="field">
@@ -162,23 +168,23 @@
       <div id="custom-controls" class="ui form">
         <div class="inline fields">
           <div class="field">
-            <button id="invisiblesToggle" name="invisiblesToggle" class="ui compact icon button" title="Toggle Invisibles"
-            tabindex="0">
-            <i class="paragraph icon"></i>
-          </button>
-        </div>
-        <div class="field">
-          <button id="regenerateTextSuggestions" name="regenerateTextSuggestions" class="ui compact icon button"
-            title="Regenerate Text Suggestions" tabindex="0">
-            <i class="sync icon"></i>
-          </button>
-        </div>
-        <div class="field">
-          <button id="regenerateTextSuggestionForSelectedBox" name="regenerateTextSuggestionForSelectedBox" class="ui compact icon button"
-            title="Regenerate Text Suggestion for Selected Box" tabindex="0">
-            <i class="redo icon"></i>
-          </button>
-        </div>
+            <button id="invisiblesToggle" name="invisiblesToggle" class="ui compact icon button"
+              title="Toggle Invisibles" tabindex="0">
+              <i class="paragraph icon"></i>
+            </button>
+          </div>
+          <div class="field">
+            <button id="regenerateTextSuggestions" name="regenerateTextSuggestions" class="ui compact icon button"
+              title="Regenerate Text Suggestions" tabindex="0">
+              <i class="sync icon"></i>
+            </button>
+          </div>
+          <div class="field">
+            <button id="regenerateTextSuggestionForSelectedBox" name="regenerateTextSuggestionForSelectedBox"
+              class="ui compact icon button" title="Regenerate Text Suggestion for Selected Box" tabindex="0">
+              <i class="redo icon"></i>
+            </button>
+          </div>
           <!-- <div class="field">
                     <div class="ui animated fade button" tabindex="0">
                       <div class="hidden content">Invisibles</div>
@@ -222,9 +228,9 @@
             <input disabled type="text" id="formtxt" boxid="" name="txt" value="">
           </div>
         </form>
-        <div class="ui mini blue empty circular label"></div>
+        <div class="ui mini blue empty circular label text-highlighter"></div>
         Latin
-        <div class="ui mini red empty circular label"></div> Cyrillic
+        <div class="ui mini red empty circular label text-highlighter"></div> Cyrillic
         <div class="ui basic fitted segment">
           <form id="formbox" class="ui form" spellcheck="false">
             <div class="four fields">
@@ -288,12 +294,189 @@
             project number PN-III-P2-2.1-PED-2021-0693, within PNCDI III.</p>
         </div>
       </div>
-
     </div>
-
   </div>
+  <div class="ui settings modal">
+    <i class="close icon"></i>
+    <div class="header">
+      Box Editor Settings
+    </div>
+    <div id="settingsMenuStickyContext" class="scrolling content">
+      <div class="ui two column grid">
+        <div class="four wide column">
+          <div id="settingsMenu" class="ui secondary vertical menu">
+            <a class="item active" data-tab="interface-settings">Interface</a>
+            <a class="item" data-tab="behavior-settings">Behavior</a>
+            <!-- <a class="item" data-tab="highlighter-settings">Text Highlighter</a> -->
+          </div>
+        </div>
+        <div class="twelve wide column">
+          <div class="ui tab active" data-tab="interface-settings">
+            <div class="ui relaxed list">
+              <div class="item">
+                <div class="header">Appearance</div>
+                <div class="description">
+                  Adjust the appearance of the interface.
+                </div>
+                <div class="list">
+                  <div class="item">
+                    <div class="ui child radio checkbox">
+                      <input type="radio" name="interface.appearance" value="light">
+                      <label>Light</label>
+                    </div>
+                  </div>
+                  <div class="item">
+                    <div class="ui child radio checkbox">
+                      <input type="radio" name="interface.appearance" value="dark">
+                      <label>Dark</label>
+                    </div>
+                  </div>
+                  <div class="item">
+                    <div class="ui child radio checkbox">
+                      <input type="radio" name="interface.appearance" value="matchDevice">
+                      <label>Match Device</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="item">
+                <div class="header">Toolbar Actions</div>
+                <div class="description">
+                  Choose which toolbar actions are available.
+                </div>
+                <div class="list">
+                  <div class="item">
+                    <div class="ui child checkbox">
+                      <input type="checkbox" name="interface.toolbarActions.detectAllLines">
+                      <label>Detecting all lines of text</label>
+                    </div>
+                  </div>
+                  <div class="item">
+                    <div class="ui child checkbox">
+                      <input type="checkbox" name="interface.toolbarActions.detectSelectedBox">
+                      <label>Detecting text for selected box</label>
+                    </div>
+                  </div>
+                  <div class="item">
+                    <div class="ui child checkbox">
+                      <input type="checkbox" name="interface.toolbarActions.detectAllBoxes">
+                      <label>Detecting text for all boxes</label>
+                    </div>
+                  </div>
+                  <div class="item">
+                    <div class="ui child checkbox">
+                      <input type="checkbox" name="interface.toolbarActions.showInvisibleChars">
+                      <label>Showing invisible characters</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="item">
+                <div class="header">Image View</div>
+                <div class="description">
+                  Adjust the height of the image view in the main screen.
+                </div>
+                <div class="list">
+                  <div class="item">
+                    <div class="ui child radio checkbox">
+                      <input type="radio" name="interface.imageView" value="short">
+                      <label>Short</label>
+                    </div>
+                  </div>
+                  <div class="item">
+                    <div class="ui child radio checkbox">
+                      <input type="radio" name="interface.imageView" value="medium">
+                      <label>Medium</label>
+                    </div>
+                  </div>
+                  <div class="item">
+                    <div class="ui child radio checkbox">
+                      <input type="radio" name="interface.imageView" value="tall">
+                      <label>Tall</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ui tab" data-tab="behavior-settings">
+            <div class="ui relaxed list">
+              <div class="item" name="onImageLoad">
+                <div class="header">On Image Load</div>
+                <div class="description">
+                  Perform actions when a new image is loaded.
+                </div>
+                <div class="list">
+                  <div class="item">
+                    <div class="ui child checkbox">
+                      <input type="checkbox" name="behavior.onImageLoad.detectAllLines">
+                      <label>Detect all lines of text</label>
+                    </div>
+                  </div>
+                  <div class="item">
+                    <div class="ui child checkbox">
+                      <input type="checkbox" name="behavior.onImageLoad.includeTextForDetectedLines">
+                      <label>Include text for detected lines</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="item" name="alerting">
+                <div class="header">Alerting</div>
+                <div class="description">
+                  Set how you would like to be alerted.
+                </div>
+                <div class="list">
+                  <div class="item">
+                    <div class="ui child checkbox">
+                      <input type="checkbox" name="behavior.alerting.alertLoadBoxFileDifference">
+                      <label>Box file name is different than the image file name</label>
+                    </div>
+                  </div>
+                  <div class="item">
+                    <div class="ui child checkbox">
+                      <input type="checkbox" name="behavior.alerting.alertUncommittedChanges">
+                      <label>
+                        Unsaved changes when attempting to close the editor
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- <div class="ui tab" data-tab="highlighter-settings">
+          <div class="ui relaxed list">
+            <div class="item">
+              <div class="header">On Image Load</div>
+              <div class="description">
+                Perform actions when a new image is loaded.
+              </div>
+              <div class="list">
+                <div class="item">
+                  <div class="ui child checkbox">
+                    <input type="checkbox" name="detectAllLines">
+                    <label>Detect all lines of text</label>
+                  </div>
+                </div>
+                <div class="item">
+                  <div class="ui child checkbox">
+                    <input type="checkbox" name="includeTextForDetectedLines">
+                    <label>Include text for detected lines</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div> -->
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <div class="ui button">Cancel</div>
+      <div class="ui button">OK</div>
+    </div>
   </div>
-
 </body>
 
 </html>

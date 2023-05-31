@@ -32,6 +32,7 @@ function updateCookie() {
 
 // Update appSettings based on user modifications
 function updateAppSettings({ path, value, cookie }) {
+
     if (cookie) {
         appSettings = { ...appSettings, ...cookie };
         updateSettingsModal();
@@ -44,7 +45,18 @@ function updateAppSettings({ path, value, cookie }) {
         // displayMessage({ title: "Settings updated!", type: "info", message: `Path: ${path}, value: ${value}, previous value: ${obj[pathArray[pathArray.length - 1]]}.` });
         obj[pathArray[pathArray.length - 1]] = value;
         updateCookie();
+
+        // wait 1 second before continuing to the next line
+        setTimeout(() => {
+            $("#settingsModalStatus")[0].innerHTML = "Settings saved!"
+            // $("#settingsModalStatus .loader").addClass("active")
+        }, 100)
+        $("#settingsModalStatus")[0].innerHTML = "<div class='ui mini active fast inline loader'></div>"
+        // $("#settingsModalStatus .loader").addClass("active")
+        // $("#settingsModalStatus")[0].innerText = "Settings saved!"
+        // $("#settingsModalStatus .loader").removeClass("active")
     }
+
 }
 
 
@@ -2150,7 +2162,10 @@ $(document).ready(async function () {
         ;
     $('.ui.settings.modal')
         .modal({
-            blurring: true
+            blurring: true,
+            onHidden: function () {
+                $("#settingsModalStatus").text("");
+            },
         })
     cookieSettings = JSON.parse(Cookies.get("appSettings"));
     updateAppSettings({ cookie: cookieSettings });

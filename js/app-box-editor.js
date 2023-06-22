@@ -66,6 +66,8 @@ function updateSettingsModal() {
     for (const [key, value] of Object.entries(appSettings.interface.toolbarActions)) {
         const path = `interface.toolbarActions.${key}`;
         document.querySelector(`input[name='${path}']`).checked = value;
+        // find parent of button with name attribute equal to path and hide toggle visibility
+        $("button[name='" + path + "']").parent().toggle(appSettings.interface.toolbarActions[key]);
     }
     // Appearance
     const appearancePath = "interface.appearance";
@@ -905,8 +907,10 @@ async function setButtons({ state }) {
         $('#myInputContainer').removeClass('disabled');
         $('#formtxt').prop('disabled', false);
         $('#taggingSegment').removeClass('disabled');
+        $('#invisiblesToggle').removeClass('disabled');
+        $('#redetectAllBoxes').removeClass('disabled');
         $('#regenerateTextSuggestions').removeClass('disabled');
-        $('#regenerateTextSuggestionsForSelectedBox').removeClass('disabled');
+        $('#regenerateTextSuggestionForSelectedBox').removeClass('disabled');
 
     } else if (state == 'disabled') {
         $('#boxFile').prop('disabled', true);
@@ -922,8 +926,10 @@ async function setButtons({ state }) {
         $('#myInputContainer').addClass('disabled');
         $('#formtxt').prop('disabled', true);
         $('#taggingSegment').addClass('disabled');
+        $('#invisiblesToggle').addClass('disabled');
+        $('#redetectAllBoxes').addClass('disabled');
         $('#regenerateTextSuggestions').addClass('disabled');
-        $('#regenerateTextSuggestionsForSelectedBox').addClass('disabled');
+        $('#regenerateTextSuggestionForSelectedBox').addClass('disabled');
     }
 }
 

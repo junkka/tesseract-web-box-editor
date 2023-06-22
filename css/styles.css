@@ -1,3 +1,37 @@
+.more::after {
+  vertical-align: -8%;
+  content: "\f105";
+  display: inline-block;
+  opacity: 1;
+  margin: 0 2rem 0 0;
+  width: 1.18em;
+  height: 1em;
+  font-family: Icons;
+  font-style: normal;
+  font-weight: 400;
+  text-decoration: inherit;
+  text-align: center;
+  speak: none;
+  font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+
+}
+a.more.external {
+  white-space: nowrap;
+  /* overflow: hidden; */
+  text-overflow: ellipsis;
+  display: inline-block;
+  width: max-content;
+}
+.more.external::after {
+  content: "\f061";
+  transform: rotate(-45deg);
+  vertical-align: -10%;
+}
+
 .maprow {
   height: 280px;
   border: 2px solid gray;

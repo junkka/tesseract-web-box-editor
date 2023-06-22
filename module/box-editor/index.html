@@ -151,8 +151,8 @@
       <div id="custom-controls" class="ui form">
         <div class="inline fields">
           <div class="field">
-            <button id="invisiblesToggle" name="interface.toolbarActions.invisiblesToggle" class="ui compact icon button"
-              title="Toggle Invisibles" tabindex="0">
+            <button id="invisiblesToggle" name="interface.toolbarActions.invisiblesToggle"
+              class="ui compact icon button" title="Toggle Invisibles" tabindex="0">
               <i class="paragraph icon"></i>
             </button>
           </div>
@@ -163,8 +163,8 @@
             </button>
           </div>
           <div class="field">
-            <button id="regenerateTextSuggestions" name="interface.toolbarActions.detectAllBoxes" class="ui compact icon button"
-              title="Regenerate Text Suggestions" tabindex="0">
+            <button id="regenerateTextSuggestions" name="interface.toolbarActions.detectAllBoxes"
+              class="ui compact icon button" title="Regenerate Text Suggestions" tabindex="0">
               <i class="sync icon"></i>
             </button>
           </div>
@@ -296,7 +296,8 @@
           <div id="settingsMenu" class="ui secondary vertical menu">
             <a class="item active" data-tab="interface-settings">Interface</a>
             <a class="item" data-tab="behavior-settings">Behavior</a>
-            <!-- <a class="item" data-tab="highlighter-settings">Text Highlighter</a> -->
+            <div class="ui divider"></div>
+            <a class="bottom attached item" data-tab="about-section">About</a>
           </div>
         </div>
         <div class="twelve wide column">
@@ -432,30 +433,32 @@
               </div>
             </div>
           </div>
-          <!-- <div class="ui tab" data-tab="highlighter-settings">
-          <div class="ui relaxed list">
-            <div class="item">
-              <div class="header">On Image Load</div>
+          <div class="ui tab" data-tab="about-section">
+            <div class="ui relaxed list">
+              <h3 class="ui header">About</h3>
               <div class="description">
-                Perform actions when a new image is loaded.
-              </div>
-              <div class="list">
-                <div class="item">
-                  <div class="ui child checkbox">
-                    <input type="checkbox" name="detectAllLines">
-                    <label>Detect all lines of text</label>
-                  </div>
-                </div>
-                <div class="item">
-                  <div class="ui child checkbox">
-                    <input type="checkbox" name="includeTextForDetectedLines">
-                    <label>Include text for detected lines</label>
-                  </div>
+                <p>This tool provides a powerful Box Editor for Tesseract. It allows you to efficiently generate, edit,
+                  and manage
+                  boxes in WordStr format.</p>
+                <p>For more information and support, please visit the project's website:
+                  <a class="more external" href="https://transitional-romanian-transliteration.azurewebsites.net/"
+                    target="_blank" title="ROTLA Website">ROTLA</a>
+                </p>
+                <p>Source code is available on <a class="more external"
+                    href="https://github.com/mariuspenteliuc/box-editor-for-tesseract" target="_blank"
+                    title="GitHub">GitHub</a></p>
+                <p>This tool is extended from the work of <a class="more external" href="https://johanjunkka.com"
+                    target="_blank" title="Initial Source Code">Johan Junkka</a>
+                </p>
+                <div class="description">
+                  <h4 class="ui header">Acknowledgements</h4>
+                  <p>This work was supported by a grant from the Romanian Ministry of Research, Innovation and
+                    Digitization, CCCDI -
+                    UEFISCDI, project number PN-III-P2-2.1-PED-2021-0693, within PNCDI III.</p>
                 </div>
               </div>
             </div>
           </div>
-        </div> -->
         </div>
       </div>
     </div>

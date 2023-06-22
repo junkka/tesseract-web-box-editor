@@ -6,17 +6,18 @@ var appSettings = {
     interface: {
         appearance: "match-device",
         toolbarActions: {
-            detectAllLines: false,
+            detectAllLines: true,
             detectSelectedBox: true,
-            detectAllBoxes: false,
-            showInvisibleChars: false,
+            detectAllBoxes: true,
+            invisiblesToggle: true,
         },
         imageView: "medium",
+        showInvisibles: false,
     },
     behavior: {
         onImageLoad: {
-            detectAllLines: true,
-            includeTextForDetectedLines: true,
+            detectAllLines: false,
+            includeTextForDetectedLines: false,
         },
         alerting: {
             enableWarrningMessagesForDifferentFileNames: true,
@@ -648,8 +649,17 @@ function processWorkerLogMessage(message) {
     } updateProgressBar(message);
 }
 
+async function regenerateInitialBoxes() {
+    $("#redetectAllBoxes").addClass("double loading");
+    $("#redetectAllBoxes").addClass("disabled");
+    await generateInitialBoxes();
+    $("#redetectAllBoxes").removeClass("double loading");
+    $("#redetectAllBoxes").removeClass("disabled");
+    sortAllBoxes();
+}
 async function regenerateTextSuggestions() {
     $("#regenerateTextSuggestions").addClass("double loading");
+    $("#regenerateTextSuggestions").addClass("disabled");
     if (boxdata.length > 0) {
         await redetectText(boxdata);
         // get box by id
@@ -664,10 +674,12 @@ async function regenerateTextSuggestions() {
         focusBoxID(selectedBox.polyid);
     }
     $("#regenerateTextSuggestions").removeClass("double loading");
+    $("#regenerateTextSuggestions").removeClass("disabled");
     sortAllBoxes();
 }
 async function regenerateTextSuggestionForSelectedBox() {
     $("#regenerateTextSuggestionForSelectedBox").addClass("double loading");
+    $("#regenerateTextSuggestionForSelectedBox").addClass("disabled");
     if (boxdata.length > 0) {
         var newValues = await redetectText([selectedBox]);
         // get box by id
@@ -678,12 +690,15 @@ async function regenerateTextSuggestionForSelectedBox() {
         setFromData(boxdata[el]);
     }
     $("#regenerateTextSuggestionForSelectedBox").removeClass("double loading");
+    $("#regenerateTextSuggestionForSelectedBox").removeClass("disabled");
     sortAllBoxes();
 }
 
-async function redetectText(rectList) {
+async function redetectText(rectList = []) {
     if (rectList.length == 0) {
-        rectList = boxdata;
+        // rectList = boxdata;
+        result = await worker.recognize(image._image)
+        return result;
     } else {
         var returnBoxes = true;
     }
@@ -709,13 +724,19 @@ async function redetectText(rectList) {
     }
 }
 
-async function generateInitialBoxes(image) {
+async function generateInitialBoxes(includeSuggestions = true) {
+    updateProgressBar({ reset: true });
+    var file,
+        img;
+    setMainLoadingStatus(true);
+
     boxlayer.clearLayers();
     boxdata = [];
     // const results = await worker.recognize(image, { left: image.width, top: image.height, width: 10, height: 10 });
     // run worker on half of the image
     // const rectangle = { left: 0, top: 0, width: image.width / 2, height: image.height/2 }
-    const results = await worker.recognize(image);
+    // const results = await worker.recognize(image);
+    results = await redetectText();
     // const results = await worker.recognize(image, { rectangle });
     // await worker.terminate();
     recognizedLinesOfText = results.data.lines;
@@ -727,11 +748,16 @@ async function generateInitialBoxes(image) {
     recognizedLinesOfText.forEach(function (line) {
         line.text = line.text.replace(/(\r\n|\n|\r)/gm, "");
     });
-    await insertSuggestions();
+    await insertSuggestions(includeSuggestions);
     // $('#formrow').removeClass('hidden');
     // select next BB
     var nextBB = getNextBB();
     fillAndFocusRect(nextBB);
+
+    setMainLoadingStatus(false);
+    initializeSlider();
+    boxdataIsDirty = false;
+    updateProgressBar({ type: 'tagging' });
 }
 
 // if selected box is deleted, select closest box
@@ -748,7 +774,7 @@ function selectClosestBox() {
 }
 
 
-async function insertSuggestions() {
+async function insertSuggestions(includeSuggestions) {
     // if data is dirty
     if (boxdataIsDirty) {
         // warn user
@@ -772,7 +798,7 @@ async function insertSuggestions() {
         var box = line.bbox;
         var text = line.text;
         var symbole = new Box({
-            text: appSettings.behavior.onImageLoad.includeTextForDetectedLines ? text : '',
+            text: includeSuggestions ? text : '',
             y1: imageHeight - box.y1, // bottom
             y2: imageHeight - box.y0, // top
             x1: box.x0, // right
@@ -1030,10 +1056,6 @@ async function loadImageFile(e) {
         }
     }
     setButtons({ state: 'disabled' });
-    updateProgressBar({ reset: true });
-    var file,
-        img;
-
 
     if ((file = this.files[0])) {
         imageFileName = file.name.split('.').slice(0, -1).join('.');
@@ -1049,7 +1071,7 @@ async function loadImageFile(e) {
             bounds = [[0, 0], [parseInt(h), parseInt(w)]]
             var bounds2 = [[h - 300, 0], [h, w]]
             imageOverlayOptions = {
-                opacity: 0.25
+                opacity: appSettings.behavior.onImageLoad.detectAllLines ? 0.25 : 1
             }
             if (image) {
                 $(image._image).fadeOut(750, function () {
@@ -1080,7 +1102,6 @@ async function loadImageFile(e) {
             boxDownloadButton: imageFileName + '.box',
             groundTruthDownloadButton: imageFileName + '.gt.txt'
         });
-        setMainLoadingStatus(true);
         worker = await Tesseract.createWorker({
             langPath: '../../assets',
             gzip: false,
@@ -1096,13 +1117,9 @@ async function loadImageFile(e) {
             tessedit_pageseg_mode: 1,// 12
         });
         if (appSettings.behavior.onImageLoad.detectAllLines) {
-            result = await generateInitialBoxes(img)
+            result = await generateInitialBoxes(includeSuggestions = appSettings.behavior.onImageLoad.includeTextForDetectedLines);
         }
-        setMainLoadingStatus(false);
         setButtons({ state: 'enabled' });
-        initializeSlider();
-        boxdataIsDirty = false;
-        updateProgressBar({ type: 'tagging' });
         $('#formtxt').focus();
         $('#formtxt').select();
         // fade image opacity back to 1 during 500ms
@@ -1455,13 +1472,13 @@ async function toggleInvisibles(e) {
     showInvisibles = !showInvisibles;
     // toggle active class for button
     $("#invisiblesToggle").toggleClass('active')
-    path = "interface.toolbarActions.showInvisibleChars";
+    path = "interface.showInvisibles";
     value = showInvisibles;
     updateAppSettings({ path, value });
     updateBackground();
     $('#formtxt').focus();
     // save cookie for invisibles
-    Cookies.set('show-invisibles', showInvisibles);
+    // Cookies.set('show-invisibles', showInvisibles);
 }
 
 async function downloadBoxFile(e) {
@@ -1942,6 +1959,7 @@ $(document).ready(async function () {
     $('#downloadGroundTruthButton').on("click", downloadGroundTruth);
     $('#invisiblesToggle').on("click", toggleInvisibles);
     $('#regenerateTextSuggestions').on("click", regenerateTextSuggestions);
+    $('#redetectAllBoxes').on("click", regenerateInitialBoxes);
     $('#regenerateTextSuggestionForSelectedBox').on("click", regenerateTextSuggestionForSelectedBox);
     $('#settingsButton').on("click", settingsPopup);
 

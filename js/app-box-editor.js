@@ -35,7 +35,6 @@ function updateAppSettings({ path, value, cookie }) {
 
     if (cookie) {
         appSettings = { ...appSettings, ...cookie };
-        updateSettingsModal();
     } else {
         const pathArray = path.split(".");
         let obj = appSettings;
@@ -56,7 +55,7 @@ function updateAppSettings({ path, value, cookie }) {
         // $("#settingsModalStatus")[0].innerText = "Settings saved!"
         // $("#settingsModalStatus .loader").removeClass("active")
     }
-
+    updateSettingsModal();
 }
 
 
@@ -71,6 +70,7 @@ function updateSettingsModal() {
     // Appearance
     const appearancePath = "interface.appearance";
     document.querySelector(`input[name='${appearancePath}'][value='${appSettings.interface.appearance}']`).checked = true;
+    setClassForAppearance(appSettings.interface.appearance);
     // Image view
     const imageViewPath = "interface.imageView";
     document.querySelector(`input[name='${imageViewPath}'][value='${appSettings.interface.imageView}']`).checked = true;
@@ -95,8 +95,13 @@ document.addEventListener("change", function (event) {
     const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
     updateAppSettings({ path: path, value: value });
 });
-// });
 
+function setClassForAppearance(value) {
+    const appearance = appSettings.interface.appearance;
+    // eliminate all classes
+    document.documentElement.classList.remove(...document.documentElement.classList);
+    document.documentElement.classList.toggle(value);
+}
 var map
 var imageFileName;
 var imageFileNameForButton;
@@ -738,13 +743,17 @@ async function generateInitialBoxes(image) {
     // const results = await worker.recognize(image, { rectangle });
     // await worker.terminate();
     recognizedLinesOfText = results.data.lines;
+    if (recognizedLinesOfText.length == 0) {
+        setMainLoadingStatus(false);
+        return false;
+    }
     // remove newlines
     recognizedLinesOfText.forEach(function (line) {
         line.text = line.text.replace(/(\r\n|\n|\r)/gm, "");
     });
     await insertSuggestions($('.ui.include-suggestions.checkbox').checkbox('is checked'));
     setMainLoadingStatus(false);
-    setButtonsEnabledState(true);
+    setButtons({state: 'enabled'});
     // $('#formrow').removeClass('hidden');
     // select next BB
     var nextBB = getNextBB();
@@ -827,6 +836,7 @@ async function askUser(object) {
     }
     return new Promise((resolve, reject) => {
         $.modal({
+            inverted: false,
             title: object.title,
             // class: 'mini',
             blurring: true,
@@ -895,8 +905,8 @@ async function loadBoxFile(e) {
     }
 }
 
-async function setButtonsEnabledState(state) {
-    if (state) {
+async function setButtons({state}) {
+    if (state == 'enabled') {
         $('#boxFile').prop('disabled', false);
         $('#downloadBoxFileButton').removeClass('disabled');
         $('#downloadGroundTruthButton').removeClass('disabled');
@@ -910,8 +920,10 @@ async function setButtonsEnabledState(state) {
         $('#myInputContainer').removeClass('disabled');
         $('#formtxt').prop('disabled', false);
         $('#taggingSegment').removeClass('disabled');
+        $('#regenerateTextSuggestions').removeClass('disabled');
+        $('#regenerateTextSuggestionsForSelectedBox').removeClass('disabled');
 
-    } else {
+    } else if (state == 'disabled') {
         $('#boxFile').prop('disabled', true);
         $('#downloadBoxFileButton').addClass('disabled');
         $('#downloadGroundTruthButton').addClass('disabled');
@@ -925,6 +937,8 @@ async function setButtonsEnabledState(state) {
         $('#myInputContainer').addClass('disabled');
         $('#formtxt').prop('disabled', true);
         $('#taggingSegment').addClass('disabled');
+        $('#regenerateTextSuggestions').addClass('disabled');
+        $('#regenerateTextSuggestionsForSelectedBox').addClass('disabled');
     }
 }
 
@@ -1018,7 +1032,7 @@ async function loadImageFile(e) {
             return;
         }
     }
-    setButtonsEnabledState(false);
+    setButtons({state: 'disabled'});
     updateProgressBar({ reset: true });
     var file,
         img;
@@ -1655,6 +1669,9 @@ async function toggleInvisibles(e) {
     showInvisibles = !showInvisibles;
     // toggle active class for button
     $("#invisiblesToggle").toggleClass('active')
+    path = "interface.toolbarActions.showInvisibleChars";
+    value = showInvisibles;
+    updateAppSettings({path, value});
     updateBackground();
 
     // save cookie for invisibles
@@ -1978,8 +1995,6 @@ $(document).ready(async function () {
         $('.ui.include-suggestions.toggle.checkbox').checkbox('uncheck');
     }
 
-    Cookies.get('show-invisibles') == "true" ? toggleInvisibles() : null;
-
     // save cookie for checkbox
     $('.ui.include-suggestions.toggle.checkbox').checkbox({
         onChecked: function () {
@@ -2077,7 +2092,7 @@ $(document).ready(async function () {
         }
         if (event.layerType === 'polyline') {
             setMainLoadingStatus(true);
-            setButtonsEnabledState(false);
+            setButtons({state: 'disabled'});
             // if (event.layerType === 'polygon') {
             // cut all boxes by the polygon line
             var poly = event.layer;
@@ -2126,11 +2141,11 @@ $(document).ready(async function () {
             updateProgressBar({ type: 'tagging' });
             updateSlider({ max: boxdata.length });
             setMainLoadingStatus(false);
-            setButtonsEnabledState(true);
+            setButtons({state: 'disabled'});
         }
     });
 
-
+    setButtons({ state: 'disabled' });
     $('#nextBB').on('click', getNextAndFill);
     $('#previousBB').on('click', getPrevAndFill);
     $("#downloadBoxFileButton").on("click", downloadBoxFile);
@@ -2162,11 +2177,15 @@ $(document).ready(async function () {
         ;
     $('.ui.settings.modal')
         .modal({
+            inverted: false,
             blurring: true,
             onHidden: function () {
                 $("#settingsModalStatus").text("");
             },
         })
-    cookieSettings = JSON.parse(Cookies.get("appSettings"));
-    updateAppSettings({ cookie: cookieSettings });
+    const cookieValue = Cookies.get("appSettings");
+    if (cookieValue) {
+        cookieSettings = JSON.parse(cookieValue);
+        updateAppSettings({ cookie: cookieSettings });
+    }
 });

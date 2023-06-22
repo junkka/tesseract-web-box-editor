@@ -122,7 +122,8 @@
           <div class="eight wide column">
             <h4 class="ui dividing header">
               Download Documents
-              <div id="unsavedChanges" class="ui hidden mini red empty circular label" title="You have unsaved changes."></div>
+              <div id="unsavedChanges" class="ui hidden mini red empty circular label"
+                title="You have unsaved changes."></div>
             </h4>
             <form class="ui equal width form">
               <div class="two fields">
@@ -330,25 +331,25 @@
                   <div class="item">
                     <div class="ui child checkbox">
                       <input type="checkbox" name="interface.toolbarActions.detectAllLines">
-                      <label>Detecting all lines of text</label>
-                    </div>
-                  </div>
-                  <div class="item">
-                    <div class="ui child checkbox">
-                      <input type="checkbox" name="interface.toolbarActions.detectSelectedBox">
-                      <label>Detecting text for selected box</label>
+                      <label>Detect lines</label>
                     </div>
                   </div>
                   <div class="item">
                     <div class="ui child checkbox">
                       <input type="checkbox" name="interface.toolbarActions.detectAllBoxes">
-                      <label>Detecting text for all boxes</label>
+                      <label>Suggest text for all lines</label>
+                    </div>
+                  </div>
+                  <div class="item">
+                    <div class="ui child checkbox">
+                      <input type="checkbox" name="interface.toolbarActions.detectSelectedBox">
+                      <label>Suggest text for current line</label>
                     </div>
                   </div>
                   <div class="item">
                     <div class="ui child checkbox">
                       <input type="checkbox" name="interface.toolbarActions.showInvisibleChars">
-                      <label>Showing invisible characters</label>
+                      <label>Invisibles toggle</label>
                     </div>
                   </div>
                 </div>
@@ -406,21 +407,19 @@
               <div class="item" name="alerting">
                 <div class="header">Alerting</div>
                 <div class="description">
-                  Set how you would like to be alerted.
+                  Enable or surpress the following warning messages.
                 </div>
                 <div class="list">
                   <div class="item">
                     <div class="ui child checkbox">
-                      <input type="checkbox" name="behavior.alerting.alertLoadBoxFileDifference">
-                      <label>Box file name is different than the image file name</label>
+                      <input type="checkbox" name="behavior.alerting.enableWarrningMessagesForDifferentFileNames">
+                      <label>Box and image file names do not match</label>
                     </div>
                   </div>
                   <div class="item">
                     <div class="ui child checkbox">
-                      <input type="checkbox" name="behavior.alerting.alertUncommittedChanges">
-                      <label>
-                        Unsaved changes when attempting to close the editor
-                      </label>
+                      <input type="checkbox" name="behavior.alerting.enableWarrningMessagesForUncommittedChanges">
+                      <label>Leaving or loading an image without first downloading</label>
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 const BoxFileType = Object.freeze({ "WORDSTR": 1, "CHAR_OR_LINE": 2 })
 const IgnoreEOFBox = true
-worker = null;
+var worker = null;
 
 var appSettings = {
     interface: {
@@ -19,8 +19,8 @@ var appSettings = {
             includeTextForDetectedLines: true,
         },
         alerting: {
-            alertLoadBoxFileDifference: true,
-            alertUncommittedChanges: true,
+            enableWarrningMessagesForDifferentFileNames: true,
+            enableWarrningMessagesForUncommittedChanges: true,
         },
     },
 };
@@ -647,43 +647,38 @@ function processWorkerLogMessage(message) {
 
 async function regenerateTextSuggestions() {
     $("#regenerateTextSuggestions").addClass("double loading");
-    await redetectText(boxdata);
-    // get box by id
-    var el = boxdata.findIndex(function (x) {
-        return x.polyid == selectedBox.polyid;
-    });
-    setFromData(boxdata[el]);
-    $("#regenerateTextSuggestions").removeClass("double loading");
-    // set styles for all boxes using setStyle(boxInactive);
-    for (let box of boxlayer.getLayers()) {
-        box.setStyle(boxInactive);
+    if (boxdata.length > 0) {
+        await redetectText(boxdata);
+        // get box by id
+        var el = boxdata.findIndex(function (x) {
+            return x.polyid == selectedBox.polyid;
+        });
+        setFromData(boxdata[el]);
+        // set styles for all boxes using setStyle(boxInactive);
+        for (let box of boxlayer.getLayers()) {
+            box.setStyle(boxInactive);
+        }
+        focusBoxID(selectedBox.polyid);
     }
-    focusBoxID(selectedBox.polyid);
-    // sortAllBoxes();
+    $("#regenerateTextSuggestions").removeClass("double loading");
+    sortAllBoxes();
 }
 async function regenerateTextSuggestionForSelectedBox() {
     $("#regenerateTextSuggestionForSelectedBox").addClass("double loading");
-    var newValues = await redetectText([selectedBox]);
-    // get box by id
-    var el = boxdata.findIndex(function (x) {
-        return x.polyid == selectedBox.polyid;
-    });
-    boxdata[el].text = newValues[0].text;
-    setFromData(boxdata[el]);
+    if (boxdata.length > 0) {
+        var newValues = await redetectText([selectedBox]);
+        // get box by id
+        var el = boxdata.findIndex(function (x) {
+            return x.polyid == selectedBox.polyid;
+        });
+        boxdata[el].text = newValues[0].text;
+        setFromData(boxdata[el]);
+    }
     $("#regenerateTextSuggestionForSelectedBox").removeClass("double loading");
-    // sortAllBoxes();
+    sortAllBoxes();
 }
 
 async function redetectText(rectList) {
-    // boxdata.forEach(async function (box) {
-    //     rectangle = { left: box.x1, top: box.y1, width: box.x2 - box.x1, height: box.y2 - box.y1 }
-    //     await worker.setParameters({
-    //         tessedit_ocr_engine_mode: 1,
-    //         tessedit_pageseg_mode: 13,// 12
-    //     });
-    //     result = await worker.recognize(image._image, { rectangle })
-    //     box.text = result.data.text;
-    // });
     if (rectList.length == 0) {
         rectList = boxdata;
     } else {
@@ -695,10 +690,10 @@ async function redetectText(rectList) {
         rectangle = { left: box.x1, top: imageHeight - box.y2, width: box.x2 - box.x1, height: box.y2 - box.y1 }
         // await worker.loadLanguage('RTS_from_Cyrillic');
         // await worker.initialize('RTS_from_Cyrillic');
-        await worker.setParameters({
-            tessedit_ocr_engine_mode: 1,
-            tessedit_pageseg_mode: 1,// 12
-        });
+        // await worker.setParameters({
+        //     tessedit_ocr_engine_mode: 1,
+        //     tessedit_pageseg_mode: 1,// 12
+        // });
         result = await worker.recognize(image._image, { rectangle })
         box.text = result.data.text;
         // remove newlines
@@ -712,30 +707,8 @@ async function redetectText(rectList) {
 }
 
 async function generateInitialBoxes(image) {
-    setMainLoadingStatus(true);
-    displayMessage({ message: 'Generating initial boxes...' });
-
     boxlayer.clearLayers();
     boxdata = [];
-
-    // const worker = await Tesseract.createWorker({
-    worker = await Tesseract.createWorker({
-        langPath: '../../assets',
-        gzip: false,
-        logger: m => processWorkerLogMessage(m)
-    });
-    await worker.loadLanguage('RTS_from_Cyrillic');
-    await worker.initialize('RTS_from_Cyrillic');
-    // await worker.loadLanguage(['osd', 'RTS_from_Cyrillic']);
-    // await worker.initialize(['osd', 'RTS_from_Cyrillic']);
-    // TODO: 06/04/2023 Continue setting parameters to discover columns and not assume single block.
-    await worker.setParameters({
-        // tessedit_ocr_engine_mode: OcrEngineMode.OEM_LSTM_ONLY,
-        // tessedit_ocr_engine_mode: "OcrEngineMode.OEM_LSTM_ONLY",
-        // tessedit_pageseg_mode: "PSM_AUTO_OSD"
-        tessedit_ocr_engine_mode: 1,
-        tessedit_pageseg_mode: 1,// 12
-    });
     // const results = await worker.recognize(image, { left: image.width, top: image.height, width: 10, height: 10 });
     // run worker on half of the image
     // const rectangle = { left: 0, top: 0, width: image.width / 2, height: image.height/2 }
@@ -751,9 +724,7 @@ async function generateInitialBoxes(image) {
     recognizedLinesOfText.forEach(function (line) {
         line.text = line.text.replace(/(\r\n|\n|\r)/gm, "");
     });
-    await insertSuggestions($('.ui.include-suggestions.checkbox').checkbox('is checked'));
-    setMainLoadingStatus(false);
-    setButtons({state: 'enabled'});
+    await insertSuggestions();
     // $('#formrow').removeClass('hidden');
     // select next BB
     var nextBB = getNextBB();
@@ -774,15 +745,16 @@ function selectClosestBox() {
 }
 
 
-async function insertSuggestions(bool) {
+async function insertSuggestions() {
     // if data is dirty
     if (boxdataIsDirty) {
         // warn user
         var result = await askUser({
             title: 'Warning',
-            message: 'Suggestions will be generated from the current text. Do you want to continue?',
+            message: 'Suggestions will be generated from the current lines. Do you want to continue?',
             confirmText: 'Yes',
-            denyText: 'No'
+            denyText: 'No',
+            type: 'replacingTextWarning',
         });
         if (!result) {
             return;
@@ -797,7 +769,7 @@ async function insertSuggestions(bool) {
         var box = line.bbox;
         var text = line.text;
         var symbole = new Box({
-            text: bool ? text : '',
+            text: appSettings.behavior.onImageLoad.includeTextForDetectedLines ? text : '',
             y1: imageHeight - box.y1, // bottom
             y2: imageHeight - box.y0, // top
             x1: box.x0, // right
@@ -822,18 +794,22 @@ async function insertSuggestions(bool) {
         map.addLayer(boxlayer);
     }
     numberOFBoxes = boxdata.length;
-    selectClosestBox();
+    // selectClosestBox();
 }
 
 
 async function askUser(object) {
+    if ((object.type === 'differentFileNameWarning' && !appSettings.behavior.alerting.enableWarrningMessagesForDifferentFileNames) ||
+        (object.type === 'uncommittedChangesWarning' && !appSettings.behavior.alerting.enableWarrningMessagesForUncommittedChanges)) {
+        return true;
+    }
     setPromptKeyboardControl();
-    if (object.confirmText == undefined) {
-        object.confirmText = 'OK';
-    }
-    if (object.denyText == undefined) {
-        object.denyText = 'Cancel';
-    }
+    // if (object.confirmText == undefined) {
+    //     object.confirmText = 'OK';
+    // }
+    // if (object.denyText == undefined) {
+    //     object.denyText = 'Cancel';
+    // }
     return new Promise((resolve, reject) => {
         $.modal({
             inverted: false,
@@ -870,7 +846,13 @@ async function askUser(object) {
 
 async function loadBoxFile(e) {
     if (boxdataIsDirty) {
-        var result = await askUser({ message: 'You have unsaved changes. Are you sure you want to continue?', title: 'Unsaved Changes', type: 'warning' });
+        var result = await askUser({
+            message: 'You did not download current progress. Do you want to overwrite existing data?',
+            title: 'Unsaved Changes',
+            type: 'uncommittedChangesWarning',
+            confirmText: 'Yes',
+            denyText: 'No',
+        });
         if (!result) {
             return;
         }
@@ -890,8 +872,10 @@ async function loadBoxFile(e) {
         } else if (imageFileName != file.name.split('.').slice(0, -1).join('.') && imageFileName != undefined) {
             result = await askUser({
                 message: 'Chosen file has name <code>' + file.name + '</code> instead of expected <code>' + imageFileName + '.box</code>.<br> Are you sure you want to continue?',
-                title: 'Different File Name',
-                type: 'warning'
+                title: 'Unexpected File Name',
+                type: 'differentFileNameWarning',
+                confirmText: 'Yes',
+                denyText: 'No',
             });
             if (!result) {
                 $('#boxFile').val(boxFileNameForButton);
@@ -905,7 +889,7 @@ async function loadBoxFile(e) {
     }
 }
 
-async function setButtons({state}) {
+async function setButtons({ state }) {
     if (state == 'enabled') {
         $('#boxFile').prop('disabled', false);
         $('#downloadBoxFileButton').removeClass('disabled');
@@ -1026,13 +1010,19 @@ function updateProgressBar(options = {}) {
 
 async function loadImageFile(e) {
     if (boxdataIsDirty || lineIsDirty) {
-        var result = await askUser({ message: 'You have unsaved changes. Are you sure you want to continue?', title: 'Unsaved Changes', type: 'warning' });
+        var result = await askUser({
+            message: 'You did not download current progress. Are you sure you want to load a new image?',
+            title: 'Unsaved Changes',
+            type: 'uncommittedChangesWarning',
+            confirmText: 'Yes',
+            denyText: 'No',
+        });
         if (!result) {
             $('#imageFile').val(imageFileNameForButton);
             return;
         }
     }
-    setButtons({state: 'disabled'});
+    setButtons({ state: 'disabled' });
     updateProgressBar({ reset: true });
     var file,
         img;
@@ -1049,23 +1039,8 @@ async function loadImageFile(e) {
 
             h = this.height
             w = this.width
-            bounds = [
-                [
-                    0, 0
-                ],
-                [
-                    parseInt(h), parseInt(w)
-                ]
-            ]
-            var bounds2 = [
-                [
-                    h - 300,
-                    0
-                ],
-                [
-                    h, w
-                ]
-            ]
+            bounds = [[0, 0], [parseInt(h), parseInt(w)]]
+            var bounds2 = [[h - 300, 0], [h, w]]
             imageOverlayOptions = {
                 opacity: 0.25
             }
@@ -1098,7 +1073,26 @@ async function loadImageFile(e) {
             boxDownloadButton: imageFileName + '.box',
             groundTruthDownloadButton: imageFileName + '.gt.txt'
         });
-        result = await generateInitialBoxes(img)
+        setMainLoadingStatus(true);
+        worker = await Tesseract.createWorker({
+            langPath: '../../assets',
+            gzip: false,
+            logger: m => processWorkerLogMessage(m)
+        });
+        await worker.loadLanguage('RTS_from_Cyrillic');
+        await worker.initialize('RTS_from_Cyrillic');
+        await worker.setParameters({
+            // tessedit_ocr_engine_mode: OcrEngineMode.OEM_LSTM_ONLY,
+            // tessedit_ocr_engine_mode: "OcrEngineMode.OEM_LSTM_ONLY",
+            // tessedit_pageseg_mode: "PSM_AUTO_OSD"
+            tessedit_ocr_engine_mode: 1,
+            tessedit_pageseg_mode: 1,// 12
+        });
+        if (appSettings.behavior.onImageLoad.detectAllLines) {
+            result = await generateInitialBoxes(img)
+        }
+        setMainLoadingStatus(false);
+        setButtons({ state: 'enabled' });
         initializeSlider();
         boxdataIsDirty = false;
         updateProgressBar({ type: 'tagging' });
@@ -1256,9 +1250,16 @@ async function colorize(text) {
     return colored_text;
 }
 
-window.onbeforeunload = function () {
+window.onbeforeunload = async function () {
     if (boxdataIsDirty || lineIsDirty) {
-        return 'You have unsaved changes. Are you sure you want to leave?';
+        // return 'You have unsaved changes. Are you sure you want to leave?';
+        return await askUser({
+            message: 'You have unsaved changes. Are you sure you want to continue?',
+            title: 'Unsaved Changes',
+            type: 'uncommittedChangesWarning',
+            confirmText: 'Yes',
+            denyText: 'No',
+        });
     }
 }
 
@@ -1403,227 +1404,6 @@ async function resizeMapTo(height, duration = 500) {
     $('#mapid').animate({ height: height }, duration);
 }
 
-// L.Draw.AddRegion = L.Draw.Polygon.extend({
-//     statics: {
-//         TYPE: "addregion"
-//     },
-//     Poly: L.AddRegion,
-//     options: {
-//         showArea: !1,
-//         showLength: !1,
-//         shapeOptions: {
-//             stroke: !0,
-//             color: "#3388ff",
-//             weight: 4,
-//             opacity: .5,
-//             fill: !0,
-//             fillColor: null,
-//             fillOpacity: .2,
-//             clickable: !0
-//         },
-//         metric: !0,
-//         feet: !0,
-//         nautic: !1,
-//         precision: {}
-//     },
-//     initialize: function (t, e) {
-//         L.Draw.Polyline.prototype.initialize.call(this, t, e),
-//             this.type = L.Draw.Polygon.TYPE
-//     },
-//     _updateFinishHandler: function () {
-//         var t = this._markers.length;
-//         1 === t && this._markers[0].on("click", this._finishShape, this),
-//             t > 2 && (this._markers[t - 1].on("dblclick", this._finishShape, this), t > 3 && this._markers[t - 2].off("dblclick", this._finishShape, this))
-//     },
-//     _getTooltipText: function () {
-//         var t,
-//             e;
-//         return 0 === this._markers.length ? t = L.drawLocal.draw.handlers.polygon.tooltip.start : this._markers.length < 3 ? (t = L.drawLocal.draw.handlers.polygon.tooltip.cont, e = this._getMeasurementString()) : (t = L.drawLocal.draw.handlers.polygon.tooltip.end, e = this._getMeasurementString()), {
-//             text: t,
-//             subtext: e
-//         }
-//     },
-//     _getMeasurementString: function () {
-//         var t = this._area,
-//             e = "";
-//         return t || this.options.showLength ? (this.options.showLength && (e = L.Draw.Polyline.prototype._getMeasurementString.call(this)), t && (e += "<br>" + L.GeometryUtil.readableArea(t, this.options.metric, this.options.precision)), e) : null
-//     },
-//     _shapeIsValid: function () {
-//         return this._markers.length >= 3
-//     },
-//     _vertexChanged: function (t, e) {
-//         var i;
-//         !this.options.allowIntersection && this.options.showArea && (i = this._poly.getLatLngs(), this._area = L.GeometryUtil.geodesicArea(i)),
-//             L.Draw.Polyline.prototype._vertexChanged.call(this, t, e)
-//     },
-//     _cleanUpShape: function () {
-//         var t = this._markers.length;
-//         t > 0 && (this._markers[0].off("click", this._finishShape, this), t > 2 && this._markers[t - 1].off("dblclick", this._finishShape, this))
-//     }
-// }),
-
-// L.Draw.Region = L.Draw.Rectangle.extend({
-//     statics: {
-//         TYPE: "region"
-//     },
-//     options: {
-//         shapeOptions: {
-//             stroke: !0,
-//             color: "#3388ff",
-//             weight: 4,
-//             opacity: .5,
-//             fill: !0,
-//             fillColor: null,
-//             fillOpacity: .2,
-//             clickable: !0
-//         },
-//         showArea: !0,
-//         metric: !0
-//     },
-//     initialize: function (t, e) {
-//         this.type = L.Draw.Region.TYPE,
-//             this._initialLabelText = L.drawLocal.draw.handlers.region.tooltip.start,
-//             L.Draw.SimpleShape.prototype.initialize.call(this, t, e)
-//     },
-//     disable: function () {
-//         this._enabled && (this._isCurrentlyTwoClickDrawing = !1, L.Draw.SimpleShape.prototype.disable.call(this))
-//     },
-//     _onMouseUp: function (t) {
-//         if (!this._shape && !this._isCurrentlyTwoClickDrawing)
-//             return void (this._isCurrentlyTwoClickDrawing = !0);
-
-//         this._isCurrentlyTwoClickDrawing && !o(t.target, "leaflet-pane") || L.Draw.SimpleShape.prototype._onMouseUp.call(this)
-//     },
-//     _drawShape: function (t) {
-//         this._shape ? this._shape.setBounds(new L.LatLngBounds(this._startLatLng, t)) : (this._shape = new L.Region(new L.LatLngBounds(this._startLatLng, t), this.options.shapeOptions), this._map.addLayer(this._shape))
-//     },
-//     _fireCreatedEvent: function () {
-//         var t = new L.Region(this._shape.getBounds(), this.options.shapeOptions);
-//         L.Draw.SimpleShape.prototype._fireCreatedEvent.call(this, t)
-//     },
-//     _getTooltipText: function () {
-//         var t,
-//             e,
-//             i,
-//             o = L.Draw.SimpleShape.prototype._getTooltipText.call(this),
-//             a = this._shape,
-//             n = this.options.showArea;
-//         return a && (t = this._shape._defaultShape ? this._shape._defaultShape() : this._shape.getLatLngs(), e = L.GeometryUtil.geodesicArea(t), i = n ? L.GeometryUtil.readableArea(e, this.options.metric) : ""), {
-//             text: o.text,
-//             subtext: i
-//         }
-//     }
-// });
-
-// L.DrawToolbar = L.Toolbar.extend({
-//     statics: {
-//         TYPE: "draw"
-//     },
-//     options: {
-//         polyline: {},
-//         polygon: {},
-//         rectangle: {},
-//         region: {},
-//         circle: {},
-//         marker: {},
-//         circlemarker: {}
-//     },
-//     initialize: function (t) {
-//         for (var e in this.options)
-//             this.options.hasOwnProperty(e) && t[e] && (t[e] = L.extend({}, this.options[e], t[e]));
-
-//         this._toolbarClass = "leaflet-draw-draw",
-//             L.Toolbar.prototype.initialize.call(this, t)
-//     },
-//     getModeHandlers: function (t) {
-//         return [
-//             {
-//                 enabled: this.options.polyline,
-//                 handler: new L.Draw.Polyline(t, this.options.polyline),
-//                 title: L.drawLocal.draw.toolbar.buttons.polyline
-//             },
-//             {
-//                 enabled: this.options.polygon,
-//                 handler: new L.Draw.Polygon(t, this.options.polygon),
-//                 title: L.drawLocal.draw.toolbar.buttons.polygon
-//             },
-//             {
-//                 enabled: this.options.rectangle,
-//                 handler: new L.Draw.Rectangle(t, this.options.rectangle),
-//                 title: L.drawLocal.draw.toolbar.buttons.rectangle
-//             },
-//             {
-//                 enabled: this.options.circle,
-//                 handler: new L.Draw.Circle(t, this.options.circle),
-//                 title: L.drawLocal.draw.toolbar.buttons.circle
-//             }, {
-//                 enabled: this.options.marker,
-//                 handler: new L.Draw.Marker(t, this.options.marker),
-//                 title: L.drawLocal.draw.toolbar.buttons.marker
-//             }, {
-//                 enabled: this.options.circlemarker,
-//                 handler: new L.Draw.CircleMarker(t, this.options.circlemarker),
-//                 title: L.drawLocal.draw.toolbar.buttons.circlemarker
-//             }, {
-//                 enabled: this.options.region,
-//                 handler: new L.Draw.Region(t, this.options.region),
-//                 title: L.drawLocal.draw.toolbar.buttons.region
-//             }
-//         ]
-//     },
-//     getActions: function (t) {
-//         return [
-//             {
-//                 enabled: t.completeShape,
-//                 title: L.drawLocal.draw.toolbar.finish.title,
-//                 text: L.drawLocal.draw.toolbar.finish.text,
-//                 callback: t.completeShape,
-//                 context: t
-//             }, {
-//                 enabled: t.deleteLastVertex,
-//                 title: L.drawLocal.draw.toolbar.undo.title,
-//                 text: L.drawLocal.draw.toolbar.undo.text,
-//                 callback: t.deleteLastVertex,
-//                 context: t
-//             }, {
-//                 title: L.drawLocal.draw.toolbar.actions.title,
-//                 text: L.drawLocal.draw.toolbar.actions.text,
-//                 callback: this.disable,
-//                 context: this
-//             }, {
-//                 title: L.drawLocal.draw.toolbar.buttons.clear,
-//                 text: L.drawLocal.draw.toolbar.buttons.clear,
-//                 callback: this.clearAll,
-//                 context: this
-//             }
-//         ]
-//     },
-//     setOptions: function (t) {
-//         L.setOptions(this, t);
-//         for (var e in this._modes)
-//             this._modes.hasOwnProperty(e) && t.hasOwnProperty(e) && this._modes[e].handler.setOptions(t[e])
-
-//     }
-// });
-
-// var regionControl = new L.Control.Draw({
-//     draw: {
-//         rectangle: false,
-//         polygon: false,
-//         marker: false,
-//         circle: false,
-//         region: true,
-//         polyline: false,
-//         circlemarker: false
-//     },
-//     position: 'topright',
-//     edit: {
-//         featureGroup: regionlayer,
-//         edit: true,
-//         remove: true
-//     }
-// });
-
 function formatForPopup(objects) {
     var formatted = '<div class="ui compact grid">';
     formatted += '<div class="two column stretched row">' + '<div class="twelve wide left floated column">' + '<b>Name</b>' + '</div>' + '<div class="four wide right floated column">' + '<b>Char</b>' + '</div>' + '</div>';
@@ -1671,9 +1451,9 @@ async function toggleInvisibles(e) {
     $("#invisiblesToggle").toggleClass('active')
     path = "interface.toolbarActions.showInvisibleChars";
     value = showInvisibles;
-    updateAppSettings({path, value});
+    updateAppSettings({ path, value });
     updateBackground();
-
+    $('#formtxt').focus();
     // save cookie for invisibles
     Cookies.set('show-invisibles', showInvisibles);
 }
@@ -2067,6 +1847,7 @@ $(document).ready(async function () {
             var layer = event.layer;
             layer.on('edit', editRect);
             layer.on('click', onRectClick);
+            layer.setStyle(boxActive)
             boxlayer.addLayer(layer);
             var polyid = boxlayer.getLayerId(layer)
             var newbb = new Box({
@@ -2088,11 +1869,12 @@ $(document).ready(async function () {
             sortAllBoxes();
             initializeSlider();
             fillAndFocusRect(newbb);
-            return;
+            map.addLayer(boxlayer)
+            // return;
         }
         if (event.layerType === 'polyline') {
             setMainLoadingStatus(true);
-            setButtons({state: 'disabled'});
+            setButtons({ state: 'disabled' });
             // if (event.layerType === 'polygon') {
             // cut all boxes by the polygon line
             var poly = event.layer;
@@ -2141,7 +1923,7 @@ $(document).ready(async function () {
             updateProgressBar({ type: 'tagging' });
             updateSlider({ max: boxdata.length });
             setMainLoadingStatus(false);
-            setButtons({state: 'disabled'});
+            setButtons({ state: 'disabled' });
         }
     });
 

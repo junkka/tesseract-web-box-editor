@@ -74,6 +74,7 @@ function updateSettingsModal() {
     // Image view
     const imageViewPath = "interface.imageView";
     document.querySelector(`input[name='${imageViewPath}'][value='${appSettings.interface.imageView}']`).checked = true;
+    setMapSize({ height: appSettings.interface.imageView })
     // On image load
     for (const [key, value] of Object.entries(appSettings.behavior.onImageLoad)) {
         const path = `behavior.onImageLoad.${key}`;
@@ -1367,41 +1368,40 @@ var drawControl = new L.Control.Draw({
 //     onRemove: function (map) { },
 // });
 
-async function setMapSize(options) {
-    if (options.largeView) {
-        // Get bounds of image from map
-        var imageBounds = map.getBounds();
-        // get image height and width
-        // var imageHeight = imageBounds.getNorth() - imageBounds.getSouth();
-        // var imageWidth = imageBounds.getEast() - imageBounds.getWest();
-        // get aspect ratio of image
-        var imageAspectRatio = imageBounds.getEast() - imageBounds.getWest();
-        imageAspectRatio = imageAspectRatio / (imageBounds.getNorth() - imageBounds.getSouth());
-        // increase height of #mapid to fit aspect ratio. use smooth animation
-        var mapHeight = $('#mapid').height();
-        var mapWidth = $('#mapid').width();
-        var mapAspectRatio = mapWidth / mapHeight;
-        // console.log(imageAspectRatio, mapAspectRatio);
-        if (imageAspectRatio > .5) {
-            var newHeight = mapWidth * imageAspectRatio;
-            var newHeight = imageHeight / 2;
-            await resizeMapTo(newHeight);
-        }
-        // map.fitBounds(imageBounds);
-    } else {
-        await resizeMapTo(280);
-        // fit selected poly
-        var bounds = new L.LatLngBounds();
-        for (var i = 0; i < selectedPoly.length; i++) {
-            bounds.extend(selectedPoly[i].getBounds());
-        }
-        // map.fitBounds(bounds);
+async function setMapSize(options, animate = true) {
+    // var imageBounds = map.getBounds();
+    // var imageAspectRatio = imageBounds.getEast() - imageBounds.getWest();
+    // imageAspectRatio = imageAspectRatio / (imageBounds.getNorth() - imageBounds.getSouth());
+    // var mapHeight = $('#mapid').height();
+    // var mapWidth = $('#mapid').width();
+    // var mapAspectRatio = mapWidth / mapHeight;
+    // console.log(imageAspectRatio, mapAspectRatio);
+    // if (imageAspectRatio > .5) {
+    //     var newHeight = mapWidth * imageAspectRatio;
+    //     var newHeight = imageHeight / 2;
+    //     await resizeMapTo(newHeight);
+    // }
+    if (options.height == 'short') {
+        var newHeight = 300;
     }
-    setTimeout(function () { map.invalidateSize({ pan: false }) }, 500);
+    if (options.height == 'medium') {
+        var newHeight = 500;
+    }
+    if (options.height == 'tall') {
+        var newHeight = 700;
+    }
+
+    await resizeMapTo(newHeight, animate);
+    // fit selected poly
+    var bounds = new L.LatLngBounds();
+    for (var i = 0; i < selectedPoly.length; i++) {
+        bounds.extend(selectedPoly[i].getBounds());
+    }
+    setTimeout(function () { map.invalidateSize({ pan: true }) }, 500);
 }
 
-async function resizeMapTo(height, duration = 500) {
-    $('#mapid').animate({ height: height }, duration);
+async function resizeMapTo(height, animate) {
+    $('#mapid').animate({ height: height }, animate ? 500 : 0);
 }
 
 function formatForPopup(objects) {
@@ -1825,19 +1825,20 @@ $(document).ready(async function () {
     });
     map.on('draw:deletestart', async function (event) {
         mapDeletingState = true;
-        await setMapSize({ largeView: true });
+        // await setMapSize({ largeView: true });
     });
     map.on('draw:deletestop', async function (event) {
-        await setMapSize({ largeView: false });
+        // await setMapSize({ largeView: false });
         mapDeletingState = false;
         updateSlider({ max: boxdata.length });
     });
     map.on('draw:drawstart', async function (event) {
         mapEditingState = true;
-        await setMapSize({ largeView: true });
+        // await setMapSize({ largeView: true });
     });
     map.on('draw:drawstop', async function (event) {
-        await setMapSize({ largeView: false });
+        // await setMapSize({ largeView: false });
+        // focusRectangle(selectedPoly);
         mapEditingState = false;
     });
 
@@ -1925,6 +1926,7 @@ $(document).ready(async function () {
             setMainLoadingStatus(false);
             setButtons({ state: 'disabled' });
         }
+        focusRectangle(selectedPoly);
     });
 
     setButtons({ state: 'disabled' });
